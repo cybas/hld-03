@@ -15,13 +15,32 @@ import { ArrowLeft, MessageSquare, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const CHAT_STORAGE_KEY = 'hairlossdoctor-ai-chat-messages';
-const INITIAL_AI_MESSAGE_TEXT = "I'm a specialized AI assistant designed for hair loss assessment and guidance. I've been trained on comprehensive medical literature covering diet, hormones, medications, lifestyle factors, and treatment protocols. I can help you understand your hair loss and explore evidence-based solutions. What would you like to know?";
 
-const CONVERSATION_STARTERS = [
-  "What type of hair loss do I have?",
-  "Tell me about treatment options",
-  "Should I get blood tests?",
-  "Start hair loss assessment"
+const actionCards = [
+  {
+    emoji: '🔬',
+    title: 'Assess Hair Loss Pattern',
+    description: 'Get AI analysis of your condition',
+    action: 'What type of hair loss do I have?',
+  },
+  {
+    emoji: '💊',
+    title: 'Explore Treatment Options',
+    description: 'Discover personalized solutions',
+    action: 'Tell me about treatment options',
+  },
+  {
+    emoji: '🩸',
+    title: 'Should I Get Blood Tests?',
+    description: 'Learn about diagnostic testing',
+    action: 'Should I get blood tests?',
+  },
+  {
+    emoji: '📋',
+    title: 'Start Complete Assessment',
+    description: 'Full 4-step hair loss evaluation',
+    action: 'Start hair loss assessment',
+  },
 ];
 
 interface ChatInterfaceProps {
@@ -34,22 +53,6 @@ export function ChatInterface({ displayMode = 'page', onClose }: ChatInterfacePr
   const [isLoading, setIsLoading] = useState(false);
   const chatViewportRef = useChatScroll(messages);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-
-  const createInitialMessage = (): Message => ({
-    id: 'initial-ai-message',
-    text: INITIAL_AI_MESSAGE_TEXT,
-    sender: 'ai',
-    timestamp: new Date(),
-  });
-
-  useEffect(() => {
-    if (messages.length === 0 || (messages.length === 1 && messages[0].id !== 'initial-ai-message')) {
-      setMessages([createInitialMessage()]);
-    } else if (messages.length > 0 && messages[0].text !== INITIAL_AI_MESSAGE_TEXT && messages[0].id === 'initial-ai-message') {
-      setMessages(prev => [createInitialMessage(), ...prev.slice(1)]);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); 
 
   useEffect(() => {
     if (displayMode === 'page' || (displayMode === 'modal' && messages.length > 0)) {
@@ -106,68 +109,95 @@ export function ChatInterface({ displayMode = 'page', onClose }: ChatInterfacePr
       setTimeout(() => inputRef.current?.focus(), 0);
     }, 1000 + Math.random() * 1000);
   };
-
-  const showConversationStarters = messages.length === 1 && messages[0].id === 'initial-ai-message';
+  
+  const showWelcomeScreen = messages.length === 0;
 
   return (
-    <div className={cn("flex flex-col h-full bg-background", displayMode === 'modal' ? 'rounded-xl overflow-hidden' : '')}>
-      <header className="sticky top-0 z-10 flex items-center justify-between bg-gradient-to-br from-primary to-primary-dark text-primary-foreground p-4 shadow-md border-b border-primary-dark/50 backdrop-blur-sm">
+    <div className={cn("flex flex-col h-full", 
+                       displayMode === 'modal' ? 'rounded-xl overflow-hidden bg-background' : 'h-screen'
+    )}>
+      <header className={cn(
+        "sticky top-0 z-10 flex items-center justify-between p-4 shadow-md border-b backdrop-blur-sm",
+        displayMode === 'modal' ? "bg-gradient-to-br from-primary to-primary-dark text-primary-foreground border-primary-dark/50" : "bg-transparent border-transparent text-foreground"
+      )}>
         {displayMode === 'page' ? (
-          <Button variant="ghost" size="icon" asChild className="hover:bg-primary/80 rounded-full">
+          <Button variant="ghost" size="icon" asChild className="hover:bg-primary/10 rounded-full">
             <Link href="/" aria-label="Back to homepage">
               <ArrowLeft className="h-5 w-5" />
             </Link>
           </Button>
         ) : (
-          <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close chat" className="hover:bg-primary/80 rounded-full">
+          <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close chat" className="hover:bg-primary/80 rounded-full text-primary-foreground">
             <X className="h-5 w-5" />
           </Button>
         )}
         <div className="flex items-center">
-          <h1 className="text-lg font-semibold text-white">HairlossDoctor.AI Assistant</h1>
-          <span className="ml-2 h-2.5 w-2.5 rounded-full bg-green-400 animate-subtle-glow-pulse" title="Online"></span>
+          <h1 className={cn("text-lg font-semibold", displayMode === 'modal' ? 'text-white' : 'text-foreground')}>HairlossDoctor.AI Assistant</h1>
+          <span className={cn("ml-2 h-2.5 w-2.5 rounded-full bg-green-400", displayMode === 'modal' && 'animate-subtle-glow-pulse')} title="Online"></span>
         </div>
         <div className="w-8"> {/* Placeholder for right alignment */} </div>
       </header>
 
-      <ScrollArea viewportRef={chatViewportRef} className="flex-grow p-6 space-y-3 chat-scroll-area">
-        {messages.length > 0 ? (
-          messages.map((msg) => <MessageBubble key={msg.id} message={msg} />)
-        ) : (
-          <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-            <MessageSquare className="w-16 h-16 mb-4" />
-            <p className="text-lg">No messages yet.</p>
-            <p>Start by asking a question below.</p>
+      {showWelcomeScreen && displayMode === 'page' ? (
+        <main className="flex-grow flex flex-col items-center justify-center p-4 overflow-y-auto">
+          <div className="max-w-lg w-full bg-white rounded-2xl shadow-welcome-card p-10 text-center mb-8">
+            <h1 className="text-4xl font-semibold bg-gradient-to-r from-welcome-gradient-from to-welcome-gradient-to bg-clip-text text-transparent mb-3 tracking-tight leading-tight">
+              Hey there! 👋
+            </h1>
+            <p className="text-2xl font-semibold bg-gradient-to-r from-welcome-gradient-from to-welcome-gradient-to bg-clip-text text-transparent tracking-tight leading-tight">
+              What can I help you with?
+            </p>
           </div>
-        )}
-        {isLoading && (
-          <div className="flex justify-start">
-             <MessageBubble message={{id: 'typing', text: '', sender: 'ai', timestamp: new Date()}} />
-          </div>
-        )}
-         {isLoading && <div className="pl-12 -mt-8"><TypingIndicator /></div>}
-        
-        {showConversationStarters && (
-          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 p-4">
-            {CONVERSATION_STARTERS.map((starter) => (
-              <Button 
-                key={starter} 
-                variant="outline" 
-                size="sm"
-                className="text-left justify-start h-auto py-2.5 px-4 rounded-full bg-primary/10 border-primary/20 text-primary font-medium text-sm hover:bg-primary hover:text-primary-foreground hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 focus-visible:ring-primary"
+
+          <div className="grid md:grid-cols-2 gap-4 w-full max-w-2xl mb-8">
+            {actionCards.map((card) => (
+              <button
+                key={card.title}
                 onClick={() => {
-                  handleSendMessage(starter);
-                   setTimeout(() => inputRef.current?.focus(), 0);
+                  handleSendMessage(card.action);
+                  setTimeout(() => inputRef.current?.focus(), 0);
                 }}
+                className="bg-white rounded-xl p-5 text-left shadow-action-card hover:shadow-action-card-hover hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
               >
-                {starter}
-              </Button>
+                <div className="flex items-start space-x-3">
+                  <span className="text-3xl">{card.emoji}</span>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800">{card.title}</h3>
+                    <p className="text-sm text-gray-600 mt-1">{card.description}</p>
+                  </div>
+                </div>
+              </button>
             ))}
           </div>
-        )}
-      </ScrollArea>
+           <div className="w-full max-w-2xl mt-auto sticky bottom-0 pb-4">
+            <div className="bg-white rounded-2xl shadow-xl p-1 md:p-2">
+              <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} inputRef={inputRef} />
+            </div>
+          </div>
+        </main>
+      ) : (
+        <ScrollArea viewportRef={chatViewportRef} className="flex-grow p-6 space-y-3 chat-scroll-area bg-transparent">
+          {messages.map((msg) => <MessageBubble key={msg.id} message={msg} />)}
+          {isLoading && (
+            <div className="flex justify-start">
+               <MessageBubble message={{id: 'typing', text: '', sender: 'ai', timestamp: new Date()}} />
+            </div>
+          )}
+           {isLoading && <div className="pl-12 -mt-8"><TypingIndicator /></div>}
+        </ScrollArea>
+      )}
       
-      <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} inputRef={inputRef} />
+      {!showWelcomeScreen && displayMode === 'page' && (
+         <div className="bg-white rounded-t-2xl shadow-xl p-1 md:p-2 border-t border-gray-200">
+          <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} inputRef={inputRef} />
+        </div>
+      )}
+
+      {displayMode === 'modal' && (
+         <div className="bg-white rounded-b-xl p-1 md:p-2 border-t border-gray-200">
+            <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} inputRef={inputRef} />
+        </div>
+      )}
     </div>
   );
 }

@@ -1,3 +1,4 @@
+
 import type {Config} from 'tailwindcss';
 
 export default {
@@ -31,8 +32,8 @@ export default {
         primary: {
           DEFAULT: 'hsl(var(--primary))',
           foreground: 'hsl(var(--primary-foreground))',
-          dark: '#3D4A85', // Added for header gradient
-          'light-accent': '#5B6BC4', // Added for user message gradient
+          dark: '#3D4A85', 
+          'light-accent': '#5B6BC4', 
         },
         secondary: {
           DEFAULT: 'hsl(var(--secondary))',
@@ -70,17 +71,26 @@ export default {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))',
         },
-        'slate-200': '#E2E8F0', // Added for input border
+        'slate-200': '#E2E8F0',
+        'welcome-gradient-from': '#667eea',
+        'welcome-gradient-to': '#764ba2',
+        'blue-50': '#f0f4ff', // For page background gradient
+        'indigo-100': '#e0e7ff', // For page background gradient
       },
       borderRadius: {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
-        '2xl': '1rem', // 16px
+        'xl': '0.75rem', // 12px, for action cards
+        '2xl': '1.5rem', // 24px, for welcome card & input wrapper
       },
       boxShadow: {
         'chat-ai': '0 2px 12px rgba(0,0,0,0.08)',
         'up-md': '0 -2px 6px -1px rgba(0, 0, 0, 0.06), 0 -4px 4px -2px rgba(0, 0, 0, 0.03)',
+        'welcome-card': '0 20px 60px rgba(0, 0, 0, 0.08)',
+        'action-card': '0 4px 20px rgba(0, 0, 0, 0.06)',
+        'action-card-hover': '0 8px 30px rgba(0, 0, 0, 0.1)',
+        'xl': '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)', // For input wrapper
       },
       keyframes: {
         'accordion-down': {
@@ -112,7 +122,7 @@ export default {
           '50%, 100%': { transform: 'scale(1)', opacity: '1' },
         },
         'subtle-glow-pulse': {
-          '0%, 100%': { boxShadow: '0 0 2px 0px rgba(52, 211, 153, 0.6)' }, /* Adjusted for green-400 like color */
+          '0%, 100%': { boxShadow: '0 0 2px 0px rgba(52, 211, 153, 0.6)' }, 
           '50%': { boxShadow: '0 0 8px 3px rgba(52, 211, 153, 0.3)' },
         }
       },
