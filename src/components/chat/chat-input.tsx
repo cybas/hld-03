@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useRef, useEffect, type FormEvent } from 'react';
+import { useState, useRef, useEffect, type FormEvent, type RefObject } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { ArrowUp } from 'lucide-react';
@@ -10,11 +10,14 @@ import { cn } from '@/lib/utils';
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
   isLoading: boolean;
+  inputRef?: RefObject<HTMLTextAreaElement>; // Make inputRef optional for now or pass it down
 }
 
-export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
+export function ChatInput({ onSendMessage, isLoading, inputRef }: ChatInputProps) {
   const [inputValue, setInputValue] = useState('');
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  // Use the passed ref if available, otherwise create an internal one
+  const internalTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const textareaRef = inputRef || internalTextareaRef;
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -27,9 +30,15 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto'; // Reset height
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`; // Set to scroll height
+      const scrollHeight = textareaRef.current.scrollHeight;
+      const maxHeight = 128; // Corresponds to max-h-32 (8rem)
+      textareaRef.current.style.height = `${Math.min(scrollHeight, maxHeight)}px`;
+      // Ensure scroll to bottom of textarea if content exceeds max height
+      if (scrollHeight > maxHeight) {
+        textareaRef.current.scrollTop = textareaRef.current.scrollHeight;
+      }
     }
-  }, [inputValue]);
+  }, [inputValue, textareaRef]);
   
   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === 'Enter' && !event.shiftKey) {
@@ -52,6 +61,7 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
           rows={1}
           disabled={isLoading}
           aria-label="Chat message input"
+          // autoFocus // Adding autoFocus here
         />
         <Button
           type="submit"

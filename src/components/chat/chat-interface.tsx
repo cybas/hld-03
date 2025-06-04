@@ -1,11 +1,11 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { Message } from '@/types';
 import useLocalStorage from '@/hooks/use-local-storage';
 import useChatScroll from '@/hooks/use-chat-scroll';
-import { generateInitialResponse } from '@/ai/flows/generate-initial-response';
+// Removed Genkit import: import { generateInitialResponse } from '@/ai/flows/generate-initial-response';
 import { MessageBubble } from './message-bubble';
 import { ChatInput } from './chat-input';
 import { TypingIndicator } from './typing-indicator';
@@ -34,6 +34,7 @@ export function ChatInterface({ displayMode = 'page', onClose }: ChatInterfacePr
   const [messages, setMessages] = useLocalStorage<Message[]>(CHAT_STORAGE_KEY, []);
   const [isLoading, setIsLoading] = useState(false);
   const chatViewportRef = useChatScroll(messages);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const createInitialMessage = (): Message => ({
     id: 'initial-ai-message',
@@ -51,6 +52,40 @@ export function ChatInterface({ displayMode = 'page', onClose }: ChatInterfacePr
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); 
 
+  useEffect(() => {
+    if (displayMode === 'page' || (displayMode === 'modal' && messages.length > 0)) {
+      // Focus input when chat page loads or modal opens (and is not empty initially)
+      // Use a timeout to ensure the input is rendered and visible
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
+    }
+  }, [displayMode, messages.length]);
+
+
+  const getPlaceholderResponse = (userText: string): string => {
+    const lowerUserText = userText.toLowerCase();
+    if (lowerUserText.includes("hair loss") || lowerUserText.includes("assessment")) {
+      return "Hair loss can have many causes including genetics, hormones, stress, and nutrition. Tell me more about your specific situation. Please remember, this information is for educational purposes. Consider discussing with your healthcare provider or a dermatologist for personalized medical advice and diagnosis.";
+    }
+    if (lowerUserText.includes("treatment")) {
+      return "Treatment options include lifestyle changes, topical treatments, medications, and procedures. What type of treatment interests you most? Please remember, this information is for educational purposes. Consider discussing with your healthcare provider or a dermatologist for personalized medical advice and diagnosis.";
+    }
+    if (lowerUserText.includes("diet") || lowerUserText.includes("nutrition")) {
+      return "Diet plays a crucial role. For example, deficiencies in iron, vitamin D, zinc, or biotin can impact hair. We can discuss specific diets like vegan or keto too. Please remember, this information is for educational purposes. Consider discussing with your healthcare provider or a dermatologist for personalized medical advice and diagnosis.";
+    }
+    if (lowerUserText.includes("stress")) {
+      return "Stress can indeed lead to hair loss, often called telogen effluvium. Managing stress is key. Please remember, this information is for educational purposes. Consider discussing with your healthcare provider or a dermatologist for personalized medical advice and diagnosis.";
+    }
+    if (lowerUserText.includes("hormones")) {
+      return "Hormonal imbalances are a common factor. For men, DHT is often involved, while for women, thyroid issues or PCOS can play a role. Please remember, this information is for educational purposes. Consider discussing with your healthcare provider or a dermatologist for personalized medical advice and diagnosis.";
+    }
+     if (lowerUserText.includes("blood test")) {
+      return "Comprehensive blood tests can help identify underlying issues contributing to hair loss. These might include tests for nutrient deficiencies, hormone levels, and thyroid function. Please remember, this information is for educational purposes. Consider discussing with your healthcare provider or a dermatologist for personalized medical advice and diagnosis.";
+    }
+    return "I'm here to help with hair loss questions. Could you tell me more about what you'd like to know? Please remember, this information is for educational purposes. Consider discussing with your healthcare provider or a dermatologist for personalized medical advice and diagnosis.";
+  };
+
   const handleSendMessage = async (text: string) => {
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -61,27 +96,20 @@ export function ChatInterface({ displayMode = 'page', onClose }: ChatInterfacePr
     setMessages((prevMessages) => [...prevMessages, userMessage]);
     setIsLoading(true);
 
-    try {
-      const aiResponse = await generateInitialResponse({ question: text });
+    // Simulate AI thinking time and provide placeholder response
+    setTimeout(() => {
+      const aiResponseText = getPlaceholderResponse(text);
       const aiMessage: Message = {
-        id: `${Date.now().toString()}-ai`,
-        text: aiResponse.response,
+        id: `${Date.now().toString()}-ai-placeholder`,
+        text: aiResponseText,
         sender: 'ai',
         timestamp: new Date(),
       };
       setMessages((prevMessages) => [...prevMessages, aiMessage]);
-    } catch (error) {
-      console.error('Error fetching AI response:', error);
-      const errorMessage: Message = {
-        id: `${Date.now().toString()}-error`,
-        text: "Sorry, I encountered an issue processing your request. Please try again.",
-        sender: 'ai',
-        timestamp: new Date(),
-      };
-      setMessages((prevMessages) => [...prevMessages, errorMessage]);
-    } finally {
       setIsLoading(false);
-    }
+      // Re-focus input after AI responds
+      setTimeout(() => inputRef.current?.focus(), 0);
+    }, 1000 + Math.random() * 1000); // Simulate 1-2 second delay
   };
 
   const showConversationStarters = messages.length === 1 && messages[0].id === 'initial-ai-message';
@@ -132,7 +160,10 @@ export function ChatInterface({ displayMode = 'page', onClose }: ChatInterfacePr
                 variant="outline" 
                 size="sm"
                 className="text-left justify-start h-auto py-2"
-                onClick={() => handleSendMessage(starter)}
+                onClick={() => {
+                  handleSendMessage(starter);
+                   setTimeout(() => inputRef.current?.focus(), 0);
+                }}
               >
                 {starter}
               </Button>
@@ -141,7 +172,7 @@ export function ChatInterface({ displayMode = 'page', onClose }: ChatInterfacePr
         )}
       </ScrollArea>
       
-      <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
+      <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} inputRef={inputRef} />
     </div>
   );
 }
