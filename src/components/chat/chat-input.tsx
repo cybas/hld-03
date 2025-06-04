@@ -49,14 +49,14 @@ export function ChatInput({ onSendMessage, isLoading, inputRef }: ChatInputProps
 
   return (
     <form onSubmit={handleSubmit} className="w-full">
-      <div className="relative flex items-end gap-2 p-1"> {/* Reduced padding for compact fit in premium wrapper */}
+      <div className="relative flex items-end gap-2"> {/* Removed p-1 */}
         <Textarea
           ref={textareaRef}
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Ask about hair loss, treatments, or get an assessment..."
-          className="flex-grow resize-none bg-transparent border-2 border-transparent focus:border-primary focus:ring-0 placeholder-muted-foreground text-base px-4 py-3 max-h-32 pr-14 text-foreground"
+          className="flex-grow resize-none bg-transparent border-2 border-transparent focus:border-primary focus:ring-0 focus:outline-none placeholder-muted-foreground text-base px-4 py-3 max-h-32 pr-14 text-foreground"
           rows={1}
           disabled={isLoading}
           aria-label="Chat message input"
@@ -65,7 +65,7 @@ export function ChatInput({ onSendMessage, isLoading, inputRef }: ChatInputProps
           type="submit"
           size="icon"
           className={cn(
-            "absolute right-2 bottom-2 h-10 w-10 md:h-12 md:w-12 rounded-full bg-gradient-to-br from-send-button-gradient-from to-send-button-gradient-to text-white shadow-send-button-premium hover:scale-105 transition-transform duration-150 ease-premium-ease flex-shrink-0 active:scale-95",
+            "absolute right-2 bottom-2 h-10 w-10 md:h-12 md:w-12 rounded-full bg-primary text-primary-foreground shadow-md hover:shadow-lg hover:bg-primary/90 transition-all duration-150 ease-premium-ease flex-shrink-0 active:scale-95",
             isLoading ? "opacity-50 cursor-not-allowed" : "opacity-100"
           )}
           disabled={isLoading || !inputValue.trim()}
