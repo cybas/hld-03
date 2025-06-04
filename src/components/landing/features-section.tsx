@@ -3,17 +3,17 @@ import { Sparkles, TestTubeDiagonal, Target } from 'lucide-react';
 
 const features = [
   {
-    icon: <Sparkles className="h-8 w-8 text-accent" />, // Updated icon color
+    icon: <Sparkles className="h-8 w-8 text-accent" />,
     title: "Understand what's happening to your hair",
     description: "Gain clarity on your current hair situation with AI-powered insights.",
   },
   {
-    icon: <TestTubeDiagonal className="h-8 w-8 text-accent" />, // Updated icon color
+    icon: <TestTubeDiagonal className="h-8 w-8 text-accent" />,
     title: "Identify the real causes of your hair loss",
     description: "Our AI helps pinpoint contributing factors to your hair loss effectively.",
   },
   {
-    icon: <Target className="h-8 w-8 text-accent" />, // Updated icon color
+    icon: <Target className="h-8 w-8 text-accent" />,
     title: "Find the best treatment path for you",
     description: "Receive personalized guidance on suitable treatment options.",
   },
@@ -25,7 +25,7 @@ export function FeaturesSection() {
       <div className="container mx-auto px-6 lg:px-8 max-w-6xl">
         <div className="text-center">
           <h2 className="font-headline text-3xl leading-[1.1] sm:text-4xl md:text-5xl text-foreground">
-            How Derma.AI Helps You
+            How HairlossDoctor.AI Helps You
           </h2>
           <p className="mt-4 max-w-2xl mx-auto text-lg leading-normal text-muted-foreground sm:text-xl sm:leading-8">
             Our platform leverages advanced AI to provide comprehensive hair loss support.

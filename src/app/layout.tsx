@@ -3,7 +3,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: 'Derma.AI - AI Hair Loss Assessment',
+  title: 'HairlossDoctor.AI - AI Hair Loss Assessment',
   description: 'Your AI assistant for hair loss assessment and treatment guidance.',
 };
 

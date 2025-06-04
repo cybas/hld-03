@@ -6,7 +6,7 @@ export function HeroSection() {
     <section className="py-20 md:py-28 lg:py-32 bg-gradient-to-b from-white to-[#F0F6FF]">
       <div className="container mx-auto px-6 lg:px-8 text-center max-w-4xl">
         <h1 className="text-4xl font-extrabold leading-tight tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl font-headline text-foreground">
-          Welcome to Derma.AI
+          Welcome to HairlossDoctor.AI
         </h1>
         <p className="mt-6 max-w-3xl mx-auto text-lg text-muted-foreground sm:text-xl md:text-2xl sm:leading-8">
           Your AI assistant for hair loss assessment and treatment guidance. Understand the causes of your hair loss and find personalized solutions.

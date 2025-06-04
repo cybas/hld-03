@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ArrowLeft, MessageSquare } from 'lucide-react';
 
-const CHAT_STORAGE_KEY = 'derma-ai-chat-messages';
+const CHAT_STORAGE_KEY = 'hairlossdoctor-ai-chat-messages';
 const INITIAL_AI_MESSAGE: Message = {
   id: 'initial-ai-message',
   text: "I'm a specialized AI for hair loss assessment. I can help you understand hair loss patterns, contributing factors, and treatment options. What would you like to know?",
@@ -75,7 +75,7 @@ export function ChatInterface() {
             <ArrowLeft className="h-5 w-5" />
           </Link>
         </Button>
-        <h1 className="text-lg font-semibold text-foreground">Derma.AI Chat</h1>
+        <h1 className="text-lg font-semibold text-foreground">HairlossDoctor.AI Chat</h1>
         <div className="w-8"> {/* Placeholder for right alignment */} </div>
       </header>
 
