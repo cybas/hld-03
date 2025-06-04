@@ -1,9 +1,10 @@
+
 'use client';
 
 import { useState, useRef, useEffect, type FormEvent } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { ArrowRight } from 'lucide-react';
+import { ArrowUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ChatInputProps {
@@ -46,7 +47,7 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Ask me about hair loss, treatments, or assessment..."
+          placeholder="Ask about hair loss, treatments, or get an assessment..."
           className="flex-grow resize-none rounded-xl border-border bg-input p-3 pr-12 text-sm focus-visible:ring-1 focus-visible:ring-ring max-h-32 overflow-y-auto"
           rows={1}
           disabled={isLoading}
@@ -56,13 +57,13 @@ export function ChatInput({ onSendMessage, isLoading }: ChatInputProps) {
           type="submit"
           size="icon"
           className={cn(
-            "absolute right-2 bottom-2 h-8 w-8 rounded-lg",
+            "absolute right-2 bottom-2 h-8 w-8 rounded-lg bg-accent text-accent-foreground hover:bg-accent/90",
             isLoading ? "opacity-50 cursor-not-allowed" : "opacity-100"
             )}
           disabled={isLoading || !inputValue.trim()}
           aria-label="Send message"
         >
-          <ArrowRight className="h-4 w-4" />
+          <ArrowUp className="h-4 w-4" />
         </Button>
       </div>
     </form>

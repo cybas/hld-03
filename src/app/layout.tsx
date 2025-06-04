@@ -1,6 +1,8 @@
+
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
+import { FloatingChatButton } from '@/components/chat/floating-chat-button';
 
 export const metadata: Metadata = {
   title: 'HairlossDoctor.AI - AI Hair Loss Assessment',
@@ -22,6 +24,7 @@ export default function RootLayout({
       <body className="font-body antialiased">
         {children}
         <Toaster />
+        <FloatingChatButton />
       </body>
     </html>
   );
