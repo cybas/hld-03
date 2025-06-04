@@ -33,7 +33,7 @@ interface ChatInterfaceProps {
 export function ChatInterface({ displayMode = 'page', onClose }: ChatInterfaceProps) {
   const [messages, setMessages] = useLocalStorage<Message[]>(CHAT_STORAGE_KEY, []);
   const [isLoading, setIsLoading] = useState(false);
-  const chatContainerRef = useChatScroll(messages);
+  const chatViewportRef = useChatScroll(messages);
 
   const createInitialMessage = (): Message => ({
     id: 'initial-ai-message',
@@ -46,7 +46,6 @@ export function ChatInterface({ displayMode = 'page', onClose }: ChatInterfacePr
     if (messages.length === 0 || (messages.length === 1 && messages[0].id !== 'initial-ai-message')) {
       setMessages([createInitialMessage()]);
     } else if (messages.length > 0 && messages[0].text !== INITIAL_AI_MESSAGE_TEXT && messages[0].id === 'initial-ai-message') {
-      // If the initial message text has changed, update it
       setMessages(prev => [createInitialMessage(), ...prev.slice(1)]);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -108,7 +107,7 @@ export function ChatInterface({ displayMode = 'page', onClose }: ChatInterfacePr
         <div className="w-8"> {/* Placeholder for right alignment */} </div>
       </header>
 
-      <ScrollArea ref={chatContainerRef} className="flex-grow p-4 lg:p-6 space-y-4 chat-scroll-area">
+      <ScrollArea viewportRef={chatViewportRef} className="flex-grow p-4 lg:p-6 space-y-4 chat-scroll-area">
         {messages.length > 0 ? (
           messages.map((msg) => <MessageBubble key={msg.id} message={msg} />)
         ) : (
