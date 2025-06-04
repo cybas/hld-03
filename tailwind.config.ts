@@ -9,6 +9,9 @@ export default {
   ],
   theme: {
     extend: {
+      fontSize: {
+        '15px': '15px',
+      },
       fontFamily: {
         body: ['Inter', 'sans-serif'],
         headline: ['Inter', 'sans-serif'],
@@ -28,6 +31,8 @@ export default {
         primary: {
           DEFAULT: 'hsl(var(--primary))',
           foreground: 'hsl(var(--primary-foreground))',
+          dark: '#3D4A85', // Added for header gradient
+          'light-accent': '#5B6BC4', // Added for user message gradient
         },
         secondary: {
           DEFAULT: 'hsl(var(--secondary))',
@@ -65,11 +70,17 @@ export default {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))',
         },
+        'slate-200': '#E2E8F0', // Added for input border
       },
       borderRadius: {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
+        '2xl': '1rem', // 16px
+      },
+      boxShadow: {
+        'chat-ai': '0 2px 12px rgba(0,0,0,0.08)',
+        'up-md': '0 -2px 6px -1px rgba(0, 0, 0, 0.06), 0 -4px 4px -2px rgba(0, 0, 0, 0.03)',
       },
       keyframes: {
         'accordion-down': {
@@ -99,6 +110,10 @@ export default {
         'dot-pulse-after': {
           '0%': { transform: 'scale(0.5)', opacity: '0.5' },
           '50%, 100%': { transform: 'scale(1)', opacity: '1' },
+        },
+        'subtle-glow-pulse': {
+          '0%, 100%': { boxShadow: '0 0 2px 0px rgba(52, 211, 153, 0.6)' }, /* Adjusted for green-400 like color */
+          '50%': { boxShadow: '0 0 8px 3px rgba(52, 211, 153, 0.3)' },
         }
       },
       animation: {
@@ -107,6 +122,7 @@ export default {
         'dot-pulse-before': 'dot-pulse-before 1.2s infinite ease-in-out',
         'dot-pulse': 'dot-pulse 1.2s infinite ease-in-out',
         'dot-pulse-after': 'dot-pulse-after 1.2s infinite ease-in-out',
+        'subtle-glow-pulse': 'subtle-glow-pulse 1.5s infinite ease-in-out alternate',
       },
     },
   },

@@ -12,38 +12,38 @@ export function MessageBubble({ message }: MessageBubbleProps) {
   const isUser = message.sender === 'user';
 
   return (
-    <div className={cn('flex items-end space-x-2', isUser ? 'justify-end' : 'justify-start')}>
+    <div className={cn('flex items-end space-x-2 group', isUser ? 'justify-end' : 'justify-start')}>
       {!isUser && (
-        <Avatar className="h-8 w-8">
-          <AvatarFallback className="bg-secondary text-secondary-foreground text-lg">
+        <Avatar className="h-8 w-8 self-start">
+          <AvatarFallback className="bg-muted text-muted-foreground text-lg">
             🧬
           </AvatarFallback>
         </Avatar>
       )}
       <div
         className={cn(
-          'max-w-xs lg:max-w-md xl:max-w-lg rounded-lg px-4 py-2.5 shadow-sm',
+          'max-w-xs lg:max-w-md xl:max-w-lg text-15px leading-[1.5]',
           isUser 
-            ? 'bg-primary text-primary-foreground rounded-br-none' 
-            : 'bg-card text-card-foreground rounded-bl-none border border-border' 
+            ? 'bg-gradient-to-br from-primary to-primary-light-accent text-primary-foreground rounded-t-2xl rounded-bl-2xl rounded-br-sm px-[18px] py-[14px] shadow-md' 
+            : 'bg-card text-card-foreground rounded-2xl px-5 py-4 border-l-[3px] border-l-border shadow-chat-ai' 
         )}
       >
-        {message.text === '' && message.id === 'typing' ? (
-          null // Actual typing indicator handled separately, this bubble is for avatar
+        {message.id === 'typing' ? (
+          null 
         ) : (
-          <p className="text-sm whitespace-pre-wrap">{message.text}</p>
+          <p className="whitespace-pre-wrap">{message.text}</p>
         )}
         {message.id !== 'typing' && (
             <p className={cn(
-                "text-xs mt-1",
-                isUser ? "text-primary-foreground/70 text-right" : "text-muted-foreground text-left"
+                "text-xs mt-1.5 text-right", // Always right for timestamp inside bubble
+                isUser ? "text-primary-foreground/70" : "text-muted-foreground"
               )}>
               {format(new Date(message.timestamp), 'p')}
             </p>
         )}
       </div>
       {isUser && (
-         <Avatar className="h-8 w-8">
+         <Avatar className="h-8 w-8 self-start">
           <AvatarFallback className="bg-primary text-primary-foreground text-lg">
             👤
           </AvatarFallback>

@@ -5,7 +5,6 @@ import { useState, useEffect, useRef } from 'react';
 import type { Message } from '@/types';
 import useLocalStorage from '@/hooks/use-local-storage';
 import useChatScroll from '@/hooks/use-chat-scroll';
-// Removed Genkit import: import { generateInitialResponse } from '@/ai/flows/generate-initial-response';
 import { MessageBubble } from './message-bubble';
 import { ChatInput } from './chat-input';
 import { TypingIndicator } from './typing-indicator';
@@ -54,8 +53,6 @@ export function ChatInterface({ displayMode = 'page', onClose }: ChatInterfacePr
 
   useEffect(() => {
     if (displayMode === 'page' || (displayMode === 'modal' && messages.length > 0)) {
-      // Focus input when chat page loads or modal opens (and is not empty initially)
-      // Use a timeout to ensure the input is rendered and visible
       setTimeout(() => {
         inputRef.current?.focus();
       }, 100);
@@ -96,7 +93,6 @@ export function ChatInterface({ displayMode = 'page', onClose }: ChatInterfacePr
     setMessages((prevMessages) => [...prevMessages, userMessage]);
     setIsLoading(true);
 
-    // Simulate AI thinking time and provide placeholder response
     setTimeout(() => {
       const aiResponseText = getPlaceholderResponse(text);
       const aiMessage: Message = {
@@ -107,35 +103,34 @@ export function ChatInterface({ displayMode = 'page', onClose }: ChatInterfacePr
       };
       setMessages((prevMessages) => [...prevMessages, aiMessage]);
       setIsLoading(false);
-      // Re-focus input after AI responds
       setTimeout(() => inputRef.current?.focus(), 0);
-    }, 1000 + Math.random() * 1000); // Simulate 1-2 second delay
+    }, 1000 + Math.random() * 1000);
   };
 
   const showConversationStarters = messages.length === 1 && messages[0].id === 'initial-ai-message';
 
   return (
-    <div className={cn("flex flex-col h-full bg-background", displayMode === 'modal' ? 'rounded-lg' : '')}>
-      <header className="sticky top-0 z-10 flex items-center justify-between border-b bg-primary text-primary-foreground p-4 backdrop-blur-sm">
+    <div className={cn("flex flex-col h-full bg-background", displayMode === 'modal' ? 'rounded-xl overflow-hidden' : '')}>
+      <header className="sticky top-0 z-10 flex items-center justify-between bg-gradient-to-br from-primary to-primary-dark text-primary-foreground p-4 shadow-md border-b border-primary-dark/50 backdrop-blur-sm">
         {displayMode === 'page' ? (
-          <Button variant="ghost" size="icon" asChild className="hover:bg-primary/80">
+          <Button variant="ghost" size="icon" asChild className="hover:bg-primary/80 rounded-full">
             <Link href="/" aria-label="Back to homepage">
               <ArrowLeft className="h-5 w-5" />
             </Link>
           </Button>
         ) : (
-          <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close chat" className="hover:bg-primary/80">
+          <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close chat" className="hover:bg-primary/80 rounded-full">
             <X className="h-5 w-5" />
           </Button>
         )}
         <div className="flex items-center">
-          <h1 className="text-lg font-semibold">HairlossDoctor.AI Assistant</h1>
-          <span className="ml-2 h-2.5 w-2.5 rounded-full bg-green-400 animate-pulse" title="Online"></span>
+          <h1 className="text-lg font-semibold text-white">HairlossDoctor.AI Assistant</h1>
+          <span className="ml-2 h-2.5 w-2.5 rounded-full bg-green-400 animate-subtle-glow-pulse" title="Online"></span>
         </div>
         <div className="w-8"> {/* Placeholder for right alignment */} </div>
       </header>
 
-      <ScrollArea viewportRef={chatViewportRef} className="flex-grow p-4 lg:p-6 space-y-4 chat-scroll-area">
+      <ScrollArea viewportRef={chatViewportRef} className="flex-grow p-6 space-y-3 chat-scroll-area">
         {messages.length > 0 ? (
           messages.map((msg) => <MessageBubble key={msg.id} message={msg} />)
         ) : (
@@ -153,13 +148,13 @@ export function ChatInterface({ displayMode = 'page', onClose }: ChatInterfacePr
          {isLoading && <div className="pl-12 -mt-8"><TypingIndicator /></div>}
         
         {showConversationStarters && (
-          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2 px-2">
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 p-4">
             {CONVERSATION_STARTERS.map((starter) => (
               <Button 
                 key={starter} 
                 variant="outline" 
                 size="sm"
-                className="text-left justify-start h-auto py-2"
+                className="text-left justify-start h-auto py-2.5 px-4 rounded-full bg-primary/10 border-primary/20 text-primary font-medium text-sm hover:bg-primary hover:text-primary-foreground hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 focus-visible:ring-primary"
                 onClick={() => {
                   handleSendMessage(starter);
                    setTimeout(() => inputRef.current?.focus(), 0);
