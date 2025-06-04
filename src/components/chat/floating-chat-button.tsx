@@ -7,20 +7,26 @@ import { Button } from '@/components/ui/button';
 import { ChatInterface } from './chat-interface';
 import { MessageCircle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import useLocalStorage from '@/hooks/use-local-storage';
+import type { Message } from '@/types';
+
+const CHAT_STORAGE_KEY = 'hairlossdoctor-ai-chat-messages';
 
 export function FloatingChatButton() {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const pathname = usePathname();
+  const [messages, setMessages] = useLocalStorage<Message[]>(CHAT_STORAGE_KEY, []);
+
 
   useEffect(() => {
-    // Close chat modal on route change, except if navigating to /chat itself (handled by hiding this button)
-    if (pathname !== '/chat') {
+    // Close chat modal on route change, except if navigating to /ai-chat itself (handled by hiding this button)
+    if (pathname !== '/ai-chat') { // Updated to /ai-chat
       setIsChatOpen(false);
     }
   }, [pathname]);
 
-  if (pathname === '/chat') {
-    return null; // Don't render button on the main chat page
+  if (pathname === '/ai-chat') { // Updated to /ai-chat
+    return null; // Don't render button on the main AI chat page
   }
 
   return (
@@ -42,9 +48,16 @@ export function FloatingChatButton() {
 
       {isChatOpen && (
         <div className="fixed bottom-5 right-5 w-[calc(100vw-40px)] max-w-md h-[calc(100vh-90px)] sm:h-[70vh] max-h-[600px] bg-background shadow-2xl rounded-xl flex flex-col z-50 border border-border overflow-hidden">
-          <ChatInterface displayMode="modal" onClose={() => setIsChatOpen(false)} />
+          <ChatInterface 
+            displayMode="modal" 
+            onClose={() => setIsChatOpen(false)}
+            messages={messages}
+            setMessages={setMessages}
+          />
         </div>
       )}
     </>
   );
 }
+
+    

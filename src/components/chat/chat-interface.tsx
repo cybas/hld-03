@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import type { Message } from '@/types';
-import useLocalStorage from '@/hooks/use-local-storage';
+// Removed: import useLocalStorage from '@/hooks/use-local-storage';
 import useChatScroll from '@/hooks/use-chat-scroll';
 import { MessageBubble } from './message-bubble';
 import { ChatInput } from './chat-input';
@@ -11,10 +11,10 @@ import { TypingIndicator } from './typing-indicator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { ArrowLeft, MessageSquare, X } from 'lucide-react';
+import { ArrowLeft, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const CHAT_STORAGE_KEY = 'hairlossdoctor-ai-chat-messages';
+// Removed: const CHAT_STORAGE_KEY = 'hairlossdoctor-ai-chat-messages';
 
 const actionCards = [
   {
@@ -46,10 +46,12 @@ const actionCards = [
 interface ChatInterfaceProps {
   displayMode?: 'page' | 'modal';
   onClose?: () => void;
+  messages: Message[];
+  setMessages: (value: Message[] | ((val: Message[]) => Message[])) => void;
 }
 
-export function ChatInterface({ displayMode = 'page', onClose }: ChatInterfaceProps) {
-  const [messages, setMessages] = useLocalStorage<Message[]>(CHAT_STORAGE_KEY, []);
+export function ChatInterface({ displayMode = 'page', onClose, messages, setMessages }: ChatInterfaceProps) {
+  // Removed: const [messages, setMessages] = useLocalStorage<Message[]>(CHAT_STORAGE_KEY, []);
   const [isLoading, setIsLoading] = useState(false);
   const chatViewportRef = useChatScroll(messages);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -113,12 +115,13 @@ export function ChatInterface({ displayMode = 'page', onClose }: ChatInterfacePr
   const showWelcomeScreen = messages.length === 0;
 
   return (
-    <div className={cn("flex flex-col h-full", 
-                       displayMode === 'modal' ? 'rounded-xl overflow-hidden bg-background' : 'h-screen'
+    <div className={cn(
+        "flex flex-col h-full w-full", 
+        displayMode === 'modal' ? 'rounded-xl overflow-hidden bg-background' : 'bg-transparent' // Use transparent for page mode
     )}>
       <header className={cn(
         "sticky top-0 z-10 flex items-center justify-between p-4 shadow-md border-b backdrop-blur-sm",
-        displayMode === 'modal' ? "bg-gradient-to-br from-primary to-primary-dark text-primary-foreground border-primary-dark/50" : "bg-transparent border-transparent text-foreground"
+        displayMode === 'modal' ? "bg-gradient-to-br from-primary to-primary-dark text-primary-foreground border-primary-dark/50" : "bg-background/80 border-border text-foreground"
       )}>
         {displayMode === 'page' ? (
           <Button variant="ghost" size="icon" asChild className="hover:bg-primary/10 rounded-full">
@@ -140,7 +143,7 @@ export function ChatInterface({ displayMode = 'page', onClose }: ChatInterfacePr
 
       {showWelcomeScreen && displayMode === 'page' ? (
         <main className="flex-grow flex flex-col items-center justify-center p-4 overflow-y-auto">
-          <div className="max-w-lg w-full bg-white rounded-2xl shadow-welcome-card p-10 text-center mb-8">
+          <div className="max-w-lg w-full bg-white rounded-2xl shadow-welcome-card p-10 text-center mb-8 mx-auto">
             <h1 className="text-4xl font-semibold bg-gradient-to-r from-welcome-gradient-from to-welcome-gradient-to bg-clip-text text-transparent mb-3 tracking-tight leading-tight">
               Hey there! 👋
             </h1>
@@ -176,7 +179,7 @@ export function ChatInterface({ displayMode = 'page', onClose }: ChatInterfacePr
           </div>
         </main>
       ) : (
-        <ScrollArea viewportRef={chatViewportRef} className="flex-grow p-6 space-y-3 chat-scroll-area bg-transparent">
+        <ScrollArea viewportRef={chatViewportRef} className="flex-grow p-4 md:p-6 space-y-3 md:space-y-4 chat-scroll-area bg-transparent">
           {messages.map((msg) => <MessageBubble key={msg.id} message={msg} />)}
           {isLoading && (
             <div className="flex justify-start">
@@ -188,7 +191,7 @@ export function ChatInterface({ displayMode = 'page', onClose }: ChatInterfacePr
       )}
       
       {!showWelcomeScreen && displayMode === 'page' && (
-         <div className="bg-white rounded-t-2xl shadow-xl p-1 md:p-2 border-t border-gray-200">
+         <div className="bg-background/80 backdrop-blur-md rounded-t-xl p-2 md:p-3 border-t sticky bottom-0">
           <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} inputRef={inputRef} />
         </div>
       )}
@@ -201,3 +204,5 @@ export function ChatInterface({ displayMode = 'page', onClose }: ChatInterfacePr
     </div>
   );
 }
+
+    
