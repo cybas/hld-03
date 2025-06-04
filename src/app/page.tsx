@@ -6,7 +6,7 @@ import { ActionSection } from '@/components/landing/action-section';
 
 export default function LandingPage() {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-background"> {/* Ensure main background is applied */}
       <SiteHeader />
       <main className="flex-1">
         <HeroSection />

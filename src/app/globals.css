@@ -4,36 +4,42 @@
 
 @layer base {
   :root {
-    --page-background-start: 210 40% 98%; /* light gray #F8FAFC */
-    --page-background-end: 210 40% 95%;   /* slightly different light gray */
+    /* New Brand Colors - Light Mode */
+    --page-background-start: 210 17% 98%; /* #F8FAFC - Subtle Background */
+    --page-background-end: 210 17% 98%;   /* #F8FAFC - Subtle Background */
 
-    --background: 0 0% 100%; /* white for cards, dialogs */
-    --foreground: 215 39% 17%; /* dark gray #1E293B */
+    --background: 0 0% 100%; /* #FFFFFF - Main Background, Cards, Dialogs */
+    --foreground: 215 33% 17%; /* #1E293B - Primary Text */
 
-    --card: 0 0% 100%;
-    --card-foreground: 215 39% 17%;
+    --card: 0 0% 100%; /* #FFFFFF */
+    --card-foreground: 215 33% 17%; /* #1E293B */
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 215 39% 17%;
+    --popover: 0 0% 100%; /* #FFFFFF */
+    --popover-foreground: 215 33% 17%; /* #1E293B */
 
-    --primary: 243 75% 59%; /* professional blue #4F46E5 */
-    --primary-foreground: 0 0% 100%; /* white */
+    --primary: 229 38% 48%; /* #4B5DA9 - Muted Blue-Purple */
+    --primary-foreground: 0 0% 100%; /* #FFFFFF */
 
-    --secondary: 210 40% 96.1%; /* light gray for AI message bubbles #F4F6F8 */
-    --secondary-foreground: 215 39% 17%; /* dark gray text on secondary */
+    /*
+      The brand guidelines specify "SECONDARY: #00B0CC (bright cyan) - Use for: Secondary buttons, accents, links".
+      This was previously used for AI message bubbles. AI message bubbles now use bg-card (white) with border.
+      So, '--secondary' now aligns with the new brand's "SECONDARY" color.
+    */
+    --secondary: 189 100% 40%; /* #00B0CC - Bright Cyan */
+    --secondary-foreground: 0 0% 100%; /* #FFFFFF - For text on bright cyan */
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215 20% 45.1%; /* lighter gray text */
+    --muted: 210 17% 98%; /* #F8FAFC - Subtle Background for muted elements */
+    --muted-foreground: 215 19% 47%; /* #64748B - Secondary Text */
 
-    --accent: 248 70% 65%; /* blue-violet #6A5AE2 */
-    --accent-foreground: 0 0% 100%; /* white */
+    --accent: 189 100% 40%; /* #00B0CC - Bright Cyan (same as new secondary) */
+    --accent-foreground: 0 0% 100%; /* #FFFFFF */
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 210 20% 89.8%; /* #E2E8F0 for subtle borders */
-    --input: 210 20% 94.8%; /* #F0F3F6 for input background */
-    --ring: 243 75% 59%; /* primary color for focus rings */
+    --border: 210 58% 76%; /* #9DC3E6 - Light Blue for borders */
+    --input: 0 0% 100%; /* #FFFFFF - Input background */
+    --ring: 229 38% 48%; /* #4B5DA9 - Primary color for focus rings */
 
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
@@ -54,36 +60,37 @@
   }
 
   .dark {
-    --page-background-start: 220 20% 10%; /* dark blue-gray */
-    --page-background-end: 220 20% 7%;   /* slightly different dark blue-gray */
+    /* Adjusted Dark Mode Colors based on new brand guidelines (requires specific design for full accuracy) */
+    --page-background-start: 215 33% 7%; 
+    --page-background-end: 215 33% 5%;   
 
-    --background: 220 20% 13%; /* dark gray for cards */
-    --foreground: 210 40% 98%; /* light gray/off-white */
+    --background: 215 33% 10%; /* Darker version of primary text */
+    --foreground: 210 17% 95%; /* Lighter version of subtle background */
 
-    --card: 220 20% 13%;
-    --card-foreground: 210 40% 98%;
+    --card: 215 33% 10%;
+    --card-foreground: 210 17% 95%;
 
-    --popover: 220 20% 13%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 215 33% 10%;
+    --popover-foreground: 210 17% 95%;
 
-    --primary: 243 75% 65%; /* slightly lighter blue for dark mode */
-    --primary-foreground: 220 20% 10%; /* dark text on primary */
+    --primary: 229 38% 58%; /* Lighter blue-purple */
+    --primary-foreground: 229 38% 15%; /* Darker text on primary */
 
-    --secondary: 220 15% 25%; /* darker gray for AI bubbles */
-    --secondary-foreground: 210 40% 90%;
+    --secondary: 189 100% 50%; /* Lighter cyan */
+    --secondary-foreground: 0 0% 100%; 
 
-    --muted: 220 15% 25%;
-    --muted-foreground: 210 30% 60%;
+    --muted: 210 17% 20%; /* Darker subtle background */
+    --muted-foreground: 215 19% 65%; /* Lighter secondary text */
 
-    --accent: 248 70% 70%; /* slightly lighter accent for dark mode */
-    --accent-foreground: 220 20% 10%;
+    --accent: 189 100% 50%; /* Lighter cyan */
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 220 15% 30%;
-    --input: 220 15% 27%;
-    --ring: 243 75% 65%;
+    --border: 210 58% 40%; /* Darker light blue */
+    --input: 215 33% 12%; 
+    --ring: 229 38% 58%;
 
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
@@ -108,8 +115,7 @@
     @apply border-border;
   }
   body {
-    @apply text-foreground min-h-screen;
-    background-image: linear-gradient(to bottom right, hsl(var(--page-background-start)), hsl(var(--page-background-end)));
+    @apply bg-background text-foreground min-h-screen; /* Updated to solid background */
   }
 }
 
@@ -118,7 +124,7 @@
   width: 6px;
 }
 .chat-scroll-area::-webkit-scrollbar-track {
-  background: hsl(var(--secondary));
+  background: hsl(var(--muted)); /* Use muted for track */
   border-radius: 3px;
 }
 .chat-scroll-area::-webkit-scrollbar-thumb {

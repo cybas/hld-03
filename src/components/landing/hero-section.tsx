@@ -3,22 +3,22 @@ import Link from 'next/link';
 
 export function HeroSection() {
   return (
-    <section className="container grid items-center gap-6 pb-8 pt-6 md:py-10">
-      <div className="flex max-w-[980px] flex-col items-start gap-4">
-        <h1 className="text-4xl font-extrabold leading-tight tracking-tighter md:text-6xl lg:text-7xl font-headline">
+    <section className="py-20 md:py-28 lg:py-32 bg-gradient-to-b from-white to-[#F0F6FF]">
+      <div className="container mx-auto px-6 lg:px-8 text-center max-w-4xl">
+        <h1 className="text-4xl font-extrabold leading-tight tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl font-headline text-foreground">
           Welcome to Derma.AI
         </h1>
-        <p className="max-w-[700px] text-lg text-muted-foreground sm:text-xl">
+        <p className="mt-6 max-w-3xl mx-auto text-lg text-muted-foreground sm:text-xl md:text-2xl sm:leading-8">
           Your AI assistant for hair loss assessment and treatment guidance. Understand the causes of your hair loss and find personalized solutions.
         </p>
-      </div>
-      <div className="flex gap-4">
-        <Button asChild size="lg">
-          <Link href="/chat">Start Hair Loss Assessment</Link>
-        </Button>
-        <Button variant="outline" size="lg" asChild>
-          <Link href="/chat">Chat with Hair Loss AI</Link>
-        </Button>
+        <div className="mt-10 flex items-center justify-center gap-x-6">
+          <Button asChild size="lg" className="px-8 py-3 text-base md:text-lg bg-primary text-primary-foreground hover:bg-primary/90">
+            <Link href="/chat">Start Hair Loss Assessment</Link>
+          </Button>
+          <Button variant="outline" size="lg" asChild className="px-8 py-3 text-base md:text-lg border-primary text-primary hover:bg-primary/5 hover:text-primary">
+            <Link href="/chat">Chat with Hair Loss AI</Link>
+          </Button>
+        </div>
       </div>
     </section>
   );
