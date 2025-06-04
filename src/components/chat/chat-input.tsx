@@ -30,19 +30,16 @@ export function ChatInput({ onSendMessage, isLoading, inputRef }: ChatInputProps
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
       const scrollHeight = textareaRef.current.scrollHeight;
-      // Max height for textarea, e.g., 5 lines. Adjust as needed.
-      // Assuming line height of 24px (1.5rem for text-base) and p-4 (1rem) padding on textarea gives around 120px for 3 lines visible
-      const maxHeight = 128; // Approx 8rem or 3-4 lines before scroll
+      const maxHeight = 128; 
       textareaRef.current.style.height = `${Math.min(scrollHeight, maxHeight)}px`;
       if (scrollHeight > maxHeight) {
-        // Enable scroll if content exceeds max height
         textareaRef.current.style.overflowY = 'auto';
       } else {
         textareaRef.current.style.overflowY = 'hidden';
       }
     }
   }, [inputValue, textareaRef]);
-  
+
   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
@@ -50,18 +47,16 @@ export function ChatInput({ onSendMessage, isLoading, inputRef }: ChatInputProps
     }
   };
 
-
   return (
-    // Removed form-specific background/padding here as parent will provide it.
-    <form onSubmit={handleSubmit} className="w-full"> 
-      <div className="relative flex items-end gap-2 p-2 sm:p-3"> {/* Reduced gap for tighter layout */}
+    <form onSubmit={handleSubmit} className="w-full">
+      <div className="relative flex items-end gap-2 p-1"> {/* Reduced padding for compact fit in premium wrapper */}
         <Textarea
           ref={textareaRef}
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Ask about hair loss, treatments, or get an assessment..."
-          className="flex-grow resize-none rounded-full border-2 border-slate-200 bg-slate-100 px-5 py-3 text-base focus:border-primary focus-visible:ring-0 focus-visible:ring-offset-0 max-h-32 pr-12 text-gray-800 placeholder-gray-500"
+          className="flex-grow resize-none bg-transparent border-2 border-transparent focus:border-primary focus:ring-0 placeholder-muted-foreground text-base px-4 py-3 max-h-32 pr-14 text-foreground"
           rows={1}
           disabled={isLoading}
           aria-label="Chat message input"
@@ -70,13 +65,13 @@ export function ChatInput({ onSendMessage, isLoading, inputRef }: ChatInputProps
           type="submit"
           size="icon"
           className={cn(
-            "h-10 w-10 rounded-full bg-accent text-accent-foreground hover:bg-accent/90 hover:scale-105 transition-transform duration-150 ease-in-out flex-shrink-0",
+            "absolute right-2 bottom-2 h-10 w-10 md:h-12 md:w-12 rounded-full bg-gradient-to-br from-send-button-gradient-from to-send-button-gradient-to text-white shadow-send-button-premium hover:scale-105 transition-transform duration-150 ease-premium-ease flex-shrink-0 active:scale-95",
             isLoading ? "opacity-50 cursor-not-allowed" : "opacity-100"
-            )}
+          )}
           disabled={isLoading || !inputValue.trim()}
           aria-label="Send message"
         >
-          <SendHorizontal className="h-5 w-5" />
+          <SendHorizontal className="h-5 w-5 md:h-6 md:w-6" />
         </Button>
       </div>
     </form>
