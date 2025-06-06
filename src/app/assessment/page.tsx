@@ -9,7 +9,7 @@ import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { Message } from '@/types';
-import { ArrowLeft, SendHorizontal } from 'lucide-react';
+import { ArrowLeft, SendHorizontal, MessageSquare } from 'lucide-react';
 
 interface HairLossImage {
   id: string;
@@ -262,16 +262,23 @@ export default function AssessmentPage() {
   const [isChatLoading, setIsChatLoading] = useState(false);
 
   useEffect(() => {
-    // Load selected images from session storage on component mount
     const storedImages = sessionStorage.getItem('selectedImages');
     if (storedImages) {
-      setSelectedImages(JSON.parse(storedImages));
+      try {
+        const parsedImages = JSON.parse(storedImages);
+        if (Array.isArray(parsedImages)) {
+          setSelectedImages(parsedImages);
+        }
+      } catch (error) {
+        console.error("Failed to parse selectedImages from sessionStorage:", error);
+        sessionStorage.removeItem('selectedImages'); 
+      }
     }
   }, []);
 
   const toggleImageSelection = (image: HairLossImage) => {
     setSelectedImages(prev => {
-      const isSelected = prev.find(img => img.id === image.id);
+      const isSelected = prev.some(img => img.id === image.id);
       let newSelection;
       
       if (isSelected) {
@@ -287,7 +294,7 @@ export default function AssessmentPage() {
 
   const getChatContext = () => ({
     currentStep: 1,
-    selectedImages: selectedImages.map(img => ({id: img.id, description: img.description, category: img.category})), // Send relevant info
+    selectedImages: selectedImages.map(img => ({id: img.id, description: img.description, category: img.category})),
   });
 
   const handleChatSend = async () => {
@@ -322,7 +329,8 @@ export default function AssessmentPage() {
         };
         setChatMessages(prev => [...prev, aiMessage]);
       } else {
-        // Handle error
+        const errorData = await response.text();
+        console.error('API Error response:', errorData);
         const aiMessage: Message = {
           id: `${Date.now()}-error`,
           text: 'Sorry, I had trouble processing that. Please try again.',
@@ -332,7 +340,7 @@ export default function AssessmentPage() {
         setChatMessages(prev => [...prev, aiMessage]);
       }
     } catch (error) {
-      console.error('Chat error:', error);
+      console.error('Chat fetch error:', error);
       const aiMessage: Message = {
         id: `${Date.now()}-catch-error`,
         text: 'Sorry, an error occurred. Please try again.',
@@ -347,7 +355,6 @@ export default function AssessmentPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <Link href="/" className="flex items-center text-primary hover:underline">
           <ArrowLeft className="mr-2 h-5 w-5" />
@@ -357,32 +364,30 @@ export default function AssessmentPage() {
       </div>
       <Progress value={25} className="w-full mb-6" />
 
-      {/* Instructions */}
       <div className="mb-8 text-center">
-        <h1 className="text-2xl font-semibold mb-2">Step 1: Select Images That Match Your Hair Loss Pattern</h1>
+        <h1 className="text-2xl font-semibold mb-2 text-foreground">Step 1: Select Images That Match Your Hair Loss Pattern</h1>
         <p className="text-muted-foreground">Select all images that look similar to your condition.</p>
       </div>
 
-      {/* Image Sections */}
       <div className="space-y-10 mb-10">
         {imageSections.map(section => (
           <div key={section.title}>
-            <h2 className="text-xl font-semibold mb-4 border-b pb-2">{section.title}</h2>
+            <h2 className="text-xl font-semibold mb-4 border-b pb-2 text-foreground">{section.title}</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
               {section.images.map(image => (
                 <div
                   key={image.id}
                   onClick={() => toggleImageSelection(image)}
-                  className={`cursor-pointer rounded-lg overflow-hidden border-2 transition-all duration-200 ease-in-out
+                  className={`cursor-pointer rounded-lg overflow-hidden border-2 transition-all duration-200 ease-in-out group
                     ${selectedImages.some(selImg => selImg.id === image.id) ? 'border-primary ring-2 ring-primary shadow-lg' : 'border-transparent hover:border-primary/50 hover:shadow-md'}`}
                 >
-                  <div className="relative w-full aspect-[3/4]"> {/* Aspect ratio for portrait images */}
+                  <div className="relative w-full aspect-[3/4] bg-muted overflow-hidden rounded-t-md">
                     <Image
                       src={image.url}
                       alt={image.description}
                       layout="fill"
                       objectFit="cover"
-                      className="rounded-t-md"
+                      className="group-hover:scale-105 transition-transform duration-300"
                     />
                   </div>
                   <p className="p-2 text-xs text-center bg-card text-card-foreground rounded-b-md">{image.description}</p>
@@ -393,46 +398,70 @@ export default function AssessmentPage() {
         ))}
       </div>
       
-      {/* Embedded Chat */}
-      <div className="bg-card p-6 rounded-lg shadow-lg mb-8">
-        <h3 className="text-lg font-semibold mb-4 flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 h-6 w-6 text-primary"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+      <div className="bg-card p-4 md:p-6 rounded-xl shadow-xl mb-8">
+        <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center">
+          <MessageSquare className="mr-2 h-6 w-6 text-primary"/>
           Chat About Your Image Selections
         </h3>
-        <ScrollArea className="h-48 mb-4 border rounded-md p-3">
-          {chatMessages.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">Ask questions about the patterns you've selected or how they relate to your condition.</p>}
+        <ScrollArea className="h-60 mb-4 border rounded-lg p-3 bg-background chat-scroll-area">
+          {chatMessages.length === 0 && (
+            <div className="flex flex-col items-center justify-center h-full">
+              <MessageSquare className="w-12 h-12 text-muted-foreground/50 mb-2" />
+              <p className="text-sm text-muted-foreground text-center">
+                Select images above and then ask questions here.
+              </p>
+            </div>
+          )}
           {chatMessages.map(msg => (
-            <div key={msg.id} className={`mb-2 p-2 rounded-md text-sm ${msg.sender === 'user' ? 'bg-primary/10 text-primary-foreground ml-auto w-fit max-w-[80%]' : 'bg-muted text-muted-foreground w-fit max-w-[80%]'}`}>
-              <p className={`font-semibold ${msg.sender === 'user' ? 'text-primary' : ''}`}>{msg.sender === 'user' ? 'You' : 'AI Assistant'}</p>
-              <p className="whitespace-pre-wrap">{msg.text}</p>
-              <p className="text-xs text-right opacity-70 mt-1">{new Date(msg.timestamp).toLocaleTimeString()}</p>
+            <div key={msg.id} className="mb-2 last:mb-0">
+              <div className={`p-2.5 rounded-xl text-sm w-fit max-w-[80%]
+                ${msg.sender === 'user' 
+                  ? 'bg-primary text-primary-foreground rounded-tr-sm ml-auto' 
+                  : 'bg-muted text-foreground rounded-tl-sm mr-auto'}`}>
+                <p className="font-semibold mb-0.5">{msg.sender === 'user' ? 'You' : 'AI Assistant'}</p>
+                <p className="whitespace-pre-wrap">{msg.text}</p>
+                <span className="text-xs text-muted-foreground/70 mt-1 block text-right">
+                  {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </div>
             </div>
           ))}
-          {isChatLoading && <p className="text-sm text-muted-foreground">AI is thinking...</p>}
+          {isChatLoading && (
+            <div className="flex items-center p-2.5">
+                <div className="h-2 w-2 animate-dot-pulse-before rounded-full bg-muted-foreground [animation-delay:-0.3s] mr-1"></div>
+                <div className="h-2 w-2 animate-dot-pulse rounded-full bg-muted-foreground [animation-delay:-0.15s] mr-1"></div>
+                <div className="h-2 w-2 animate-dot-pulse-after rounded-full bg-muted-foreground"></div>
+                <span className="ml-2 text-sm text-muted-foreground">AI is thinking...</span>
+            </div>
+          )}
         </ScrollArea>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 mt-4">
           <Input
             type="text"
             value={chatInput}
             onChange={(e) => setChatInput(e.target.value)}
             placeholder="Ask about your selected patterns..."
             onKeyPress={(e) => e.key === 'Enter' && !isChatLoading && handleChatSend()}
-            className="flex-grow"
+            className="flex-grow bg-muted border-transparent rounded-full px-4 py-2.5 text-sm placeholder:text-muted-foreground/80 focus:ring-2 focus:ring-primary focus:border-transparent"
             disabled={isChatLoading}
           />
-          <Button onClick={handleChatSend} disabled={isChatLoading || !chatInput.trim()} size="icon">
+          <Button 
+            onClick={handleChatSend} 
+            disabled={isChatLoading || !chatInput.trim()} 
+            size="icon"
+            className="bg-primary text-primary-foreground rounded-full p-2.5 w-10 h-10 hover:bg-primary/90 active:scale-95 transition-transform flex-shrink-0"
+            aria-label="Send message"
+          >
             <SendHorizontal className="h-5 w-5" />
-            <span className="sr-only">Send</span>
           </Button>
         </div>
       </div>
 
-      {/* Next Step Button */}
       <div className="text-center">
         <Button 
           size="lg" 
           disabled={selectedImages.length === 0}
-          onClick={() => alert("Next Step functionality to be implemented.")}
+          onClick={() => alert("Next Step functionality to be implemented.")} // Placeholder
           className="w-full sm:w-auto"
         >
           Next Step
@@ -442,3 +471,5 @@ export default function AssessmentPage() {
     </div>
   );
 }
+
+    
