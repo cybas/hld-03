@@ -267,7 +267,9 @@ export default function AssessmentPage() {
       try {
         const parsedImages = JSON.parse(storedImages);
         if (Array.isArray(parsedImages)) {
-          setSelectedImages(parsedImages);
+          // Basic validation for image objects
+          const validImages = parsedImages.filter(img => typeof img === 'object' && img !== null && 'id' in img && 'url' in img && 'description' in img && 'category' in img);
+          setSelectedImages(validImages);
         }
       } catch (error) {
         console.error("Failed to parse selectedImages from sessionStorage:", error);
@@ -404,7 +406,7 @@ export default function AssessmentPage() {
           Chat About Your Image Selections
         </h3>
         <ScrollArea className="h-60 mb-4 border rounded-lg p-3 bg-background chat-scroll-area">
-          {chatMessages.length === 0 && (
+          {chatMessages.length === 0 && !isChatLoading && (
             <div className="flex flex-col items-center justify-center h-full">
               <MessageSquare className="w-12 h-12 text-muted-foreground/50 mb-2" />
               <p className="text-sm text-muted-foreground text-center">
@@ -461,7 +463,7 @@ export default function AssessmentPage() {
         <Button 
           size="lg" 
           disabled={selectedImages.length === 0}
-          onClick={() => alert("Next Step functionality to be implemented.")} // Placeholder
+          onClick={() => alert("Next Step functionality to be implemented.")} 
           className="w-full sm:w-auto"
         >
           Next Step
@@ -471,5 +473,4 @@ export default function AssessmentPage() {
     </div>
   );
 }
-
     
