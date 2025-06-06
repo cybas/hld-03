@@ -21,6 +21,7 @@ import {
   Bike, 
   Microscope
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const dietNutritionTags = [
   'Zero red meat diet', 'Pescatarian diet', 'Vegetarian diet', 'Vegan diet', 
@@ -253,20 +254,25 @@ export default function AssessmentStep2Page() {
                 {category.title}
               </h2>
               <div className="flex flex-wrap gap-2">
-                {category.tags.map(tag => (
-                  <Button
-                    key={tag}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => toggleTagSelection(tag, category.title)}
-                    className={`rounded-full py-1.5 px-4 text-sm transition-colors h-auto
-                      ${selectedTags.some(t => t.tag === tag && t.category === category) 
-                        ? 'bg-primary text-primary-foreground hover:bg-primary/90' 
-                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-700 border-slate-200'}`}
-                  >
-                    {tag}
-                  </Button>
-                ))}
+                {category.tags.map(tag => {
+                  const isSelected = selectedTags.some(t => t.tag === tag && t.category === category.title);
+                  return (
+                    <Button
+                      key={tag}
+                      variant={isSelected ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => toggleTagSelection(tag, category.title)}
+                      className={cn(
+                        "rounded-full py-1.5 px-4 text-sm transition-colors h-auto",
+                        isSelected 
+                          ? 'border-primary hover:bg-primary/90' // Default variant handles bg-primary and text-primary-foreground
+                          : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200 hover:text-slate-700'
+                      )}
+                    >
+                      {tag}
+                    </Button>
+                  );
+                })}
               </div>
             </div>
           ))}
