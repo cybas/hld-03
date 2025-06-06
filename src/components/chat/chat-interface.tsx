@@ -114,28 +114,52 @@ export function ChatInterface({ displayMode = 'page', onClose, messages, setMess
     return "I'm here to help with hair loss questions. Could you tell me more about what you'd like to know? Please remember, this information is for educational purposes. Consider discussing with your healthcare provider or a dermatologist for personalized medical advice and diagnosis.";
   };
 
+  // Placeholder for the function to prepare agent context
+  const prepareAgentContext = (messages: Message[]) => {
+    // In a real application, this function would prepare
+    // the conversation history and potentially other relevant
+    // information to send to the AI model.
+    // For now, it just returns the user's latest message.
+    return messages[messages.length - 1]?.text || '';
+  };
+
   const handleSendMessage = async (text: string) => {
     const userMessage: Message = {
       id: Date.now().toString(),
       text,
       sender: 'user',
       timestamp: new Date(),
-    };
+    };    
     setMessages((prevMessages) => [...prevMessages, userMessage]);
     setIsLoading(true);
 
-    setTimeout(() => {
-      const aiResponseText = getPlaceholderResponse(text);
-      const aiMessage: Message = {
-        id: `${Date.now().toString()}-ai-placeholder`,
-        text: aiResponseText,
-        sender: 'ai',
-        timestamp: new Date(),
-      };
-      setMessages((prevMessages) => [...prevMessages, aiMessage]);
+    try {
+      // Prepare context for the AI (using placeholder for now)
+      const context = prepareAgentContext([...messages, userMessage]);
+
+      const response = await fetch('/api/bedrock-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: context }), // Send prepared context
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const aiMessage: Message = { id: `${Date.now()}-ai`, text: data.response, sender: 'ai', timestamp: new Date() };
+        setMessages((prevMessages) => [...prevMessages, aiMessage]);
+      } else {
+        throw new Error(`API call failed with status: ${response.status}`);
+      }
+    } catch (error) {
+      console.error('Chat error:', error);
+      // Fallback to placeholder response
+      const fallbackResponse = getPlaceholderResponse(text);
+      const aiMessage: Message = { id: `${Date.now()}-fallback`, text: fallbackResponse, sender: 'ai', timestamp: new Date() };
+ setMessages((prevMessages) => [...prevMessages, aiMessage]);
+    } finally {
       setIsLoading(false);
       setTimeout(() => inputRef.current?.focus(), 0);
-    }, 1000 + Math.random() * 1000);
+    }
   };
 
   const showWelcomeScreen = messages.length === 0;
