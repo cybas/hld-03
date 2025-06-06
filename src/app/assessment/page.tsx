@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -8,15 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import type { Message } from '@/types';
+import type { Message, HairLossImage, AssessmentData } from '@/types';
 import { ArrowLeft, SendHorizontal, MessageSquare } from 'lucide-react';
-
-interface HairLossImage {
-  id: string;
-  url: string;
-  description: string;
-  category: string;
-}
 
 // Image Data
 const malePatternImages: HairLossImage[] = [
@@ -262,17 +254,20 @@ export default function AssessmentPage() {
   const [isChatLoading, setIsChatLoading] = useState(false);
 
   useEffect(() => {
-    const storedImages = sessionStorage.getItem('selectedImages');
-    if (storedImages) {
+    const storedAssessmentData = sessionStorage.getItem('assessmentData');
+    if (storedAssessmentData) {
       try {
-        const parsedImages = JSON.parse(storedImages);
-        if (Array.isArray(parsedImages)) {
-          const validImages = parsedImages.filter(img => typeof img === 'object' && img !== null && 'id' in img && 'url' in img && 'description' in img && 'category' in img);
+        const parsedData: AssessmentData = JSON.parse(storedAssessmentData);
+        if (parsedData.selectedImages && Array.isArray(parsedData.selectedImages)) {
+          const validImages = parsedData.selectedImages.filter(img => 
+            typeof img === 'object' && img !== null && 
+            'id' in img && 'url' in img && 'description' in img && 'category' in img
+          );
           setSelectedImages(validImages);
         }
       } catch (error) {
-        console.error("Failed to parse selectedImages from sessionStorage:", error);
-        sessionStorage.removeItem('selectedImages'); 
+        console.error("Failed to parse assessmentData from sessionStorage:", error);
+        sessionStorage.removeItem('assessmentData'); 
       }
     }
   }, []);
@@ -288,15 +283,25 @@ export default function AssessmentPage() {
         newSelection = [...prev, image];
       }
       
-      sessionStorage.setItem('selectedImages', JSON.stringify(newSelection));
+      const assessmentUpdate: AssessmentData = {
+        selectedImages: newSelection,
+        currentStep: 1,
+        // Preserve other assessment data if it exists
+        selectedTags: JSON.parse(sessionStorage.getItem('assessmentData') || '{}').selectedTags || []
+      };
+      sessionStorage.setItem('assessmentData', JSON.stringify(assessmentUpdate));
       return newSelection;
     });
   };
 
-  const getChatContext = () => ({
-    currentStep: 1,
-    selectedImages: selectedImages.map(img => ({id: img.id, description: img.description, category: img.category})),
-  });
+  const getChatContext = () => {
+    // For Step 1 chat, we only need selectedImages and currentStep
+    // selectedTags might exist in session if user navigated back and forth, but not relevant for Step 1 AI context
+    return {
+      currentStep: 1,
+      selectedImages: selectedImages.map(img => ({id: img.id, description: img.description, category: img.category})),
+    };
+  };
 
   const handleChatSend = async () => {
     if (!chatInput.trim()) return;
@@ -356,7 +361,7 @@ export default function AssessmentPage() {
 
   return (
     <>
-      <div className="container mx-auto px-4 py-8 pb-28"> {/* Added pb-28 for sticky footer */}
+      <div className="container mx-auto px-4 py-8 pb-28">
         <div className="flex items-center justify-between mb-4">
           <Link href="/" className="flex items-center text-primary hover:underline">
             <ArrowLeft className="mr-2 h-5 w-5" />
@@ -460,17 +465,15 @@ export default function AssessmentPage() {
         </div>
       </div>
 
-      {/* Sticky Footer for Next Step Button */}
       <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border shadow-up-md z-10">
         <div className="container mx-auto px-4 py-4">
           <div className="text-center">
             <Button 
               size="lg" 
               disabled={selectedImages.length === 0}
-              onClick={() => alert("Next Step functionality to be implemented.")} 
-              className="w-full sm:w-auto"
+              asChild
             >
-              Next Step
+              <Link href="/assessment/step2">Next Step</Link>
             </Button>
             {selectedImages.length === 0 && <p className="text-sm text-muted-foreground mt-2">Please select at least one image to proceed.</p>}
           </div>
@@ -479,4 +482,3 @@ export default function AssessmentPage() {
     </>
   );
 }
-    
