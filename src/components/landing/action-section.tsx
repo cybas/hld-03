@@ -14,7 +14,7 @@ export function ActionSection() {
         </p>
         <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-x-6">
           <Button asChild size="lg" className="w-full sm:w-auto px-8 py-3 text-base md:text-lg bg-primary text-primary-foreground hover:bg-primary/90">
-            <Link href="/ai-chat">Start Hair Loss Assessment</Link>
+            <Link href="/assessment">Start Hair Loss Assessment</Link>
           </Button>
           <Button variant="outline" size="lg" asChild className="w-full sm:w-auto px-8 py-3 text-base md:text-lg border-primary text-primary hover:bg-primary/5 hover:text-primary">
             <Link href="/ai-chat">Chat with Hair Loss AI</Link>
