@@ -9,10 +9,10 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import type { 
-  Message, 
-  HairLossImage, 
-  SelectedTag, 
+import type {
+  Message,
+  HairLossImage,
+  SelectedTag,
   AssessmentData,
   AssessmentResults,
   RecommendationDetail,
@@ -27,6 +27,11 @@ const recommendationMap: Record<string, Omit<RecommendationDetail, 'tag' | 'cate
     recommendation: 'Incorporate stress-management techniques: mindfulness, meditation, yoga, or regular physical activity. Ensure adequate sleep. Consider discussing with a healthcare provider if stress is chronic or severe. Magnesium glycinate (e.g., 200-400mg daily) might support relaxation for some, but consult a doctor first.'
   },
   'Crash dieting/Calorie restriction': {
+    issue: 'Rapid weight loss or severe calorie restriction can lead to acute nutrient deficiencies (e.g., protein, iron, zinc, biotin).',
+    impact: 'Often results in significant, diffuse hair shedding (telogen effluvium) a few months after the restrictive period begins.',
+    recommendation: 'Resume a balanced, nutrient-dense diet with adequate protein (approx. 1-1.2g per kg of ideal body weight), iron, zinc, and essential fatty acids. Avoid extreme calorie deficits. Consult a nutritionist or doctor for guidance on healthy eating patterns.'
+  },
+   'Crash dieting': { // Alias for consistency with user prompt
     issue: 'Rapid weight loss or severe calorie restriction can lead to acute nutrient deficiencies (e.g., protein, iron, zinc, biotin).',
     impact: 'Often results in significant, diffuse hair shedding (telogen effluvium) a few months after the restrictive period begins.',
     recommendation: 'Resume a balanced, nutrient-dense diet with adequate protein (approx. 1-1.2g per kg of ideal body weight), iron, zinc, and essential fatty acids. Avoid extreme calorie deficits. Consult a nutritionist or doctor for guidance on healthy eating patterns.'
@@ -78,12 +83,15 @@ const summarizeSelections = (selections: (HairLossImage[] | SelectedTag[]), type
   if (!selections) return summary;
 
   selections.forEach(item => {
-    const category = item.category;
-    const description = type === 'images' ? (item as HairLossImage).description : (item as SelectedTag).tag;
-    if (!summary[category]) {
-      summary[category] = [];
+    // Ensure item has a category property before trying to access it
+    if (item && typeof item === 'object' && 'category' in item) {
+      const category = item.category as string; // Type assertion after check
+      const description = type === 'images' ? (item as HairLossImage).description : (item as SelectedTag).tag;
+      if (!summary[category]) {
+        summary[category] = [];
+      }
+      summary[category].push(description);
     }
-    summary[category].push(description);
   });
   return summary;
 };
@@ -109,21 +117,24 @@ export default function AssessmentStep3Page() {
       let classification: AssessmentResults['classification'] = 'Temporary';
       let severity: AssessmentResults['severity'] = 'Mild';
 
-      const scarringImageCategories = ['other']; 
-      const scarringTags = ['Scalp wounds/sores', 'Scalp infection/fungus', 'Crusty patches', 'Scalp psoriasis', 'Lichen Planopilaris - Scarring alopecia', 'Dissecting Cellulitis - Inflammatory condition', 'Central Centrifugal Cicatricial Alopecia'];
-      
-      const agaImageCategories = ['male-pattern', 'female-pattern'];
-      const agaTags = ['Thinning hair on crown', 'Thinning hair at temples'];
-      
-      const temporaryTags = ['High stress', 'Crash dieting/Calorie restriction', 'Pregnancy/postpartum', 'Major life events', 'Chemotherapy (Cancer treatment)', 'Telogen Effluvium - Stress-related shedding'];
+      const scarringImageCategories = ['other'];
+      const scarringTags = ['Scalp wounds/sores', 'Scalp infection/fungus', 'Crusty patches', 'Scalp psoriasis', 'Lichen Planopilaris - Scarring alopecia', 'Dissecting Cellulitis - Inflammatory condition', 'Central Centrifugal Cicatricial Alopecia', 'Central Centrifugal Cicatricial Alopecia (advanced)'];
 
-      if (scarringTags.some(tag => tagNames.includes(tag)) || 
-          selectedImages.some(img => scarringTags.includes(img.description)) || // Check if any selected image description matches a scarring condition
-          imageCategories.some(cat => scarringImageCategories.includes(cat) && 
-            selectedImages.filter(img => img.category === cat).some(img => 
-              img.description.toLowerCase().includes('scarring') || 
+      const agaImageCategories = ['male-pattern', 'female-pattern'];
+      const agaTags = ['Thinning hair on crown', 'Thinning hair at temples', 'Acne or oily skin', 'More facial or body hair'];
+
+      const temporaryTags = ['High stress', 'Crash dieting/Calorie restriction', 'Crash dieting', 'Pregnancy/postpartum', 'Major life events', 'Chemotherapy (Cancer treatment)', 'Telogen Effluvium - Stress-related shedding', 'Telogen Effluvium - Diffuse shedding', 'Telogen Effluvium - Pattern variation'];
+
+
+      if (scarringTags.some(tag => tagNames.includes(tag)) ||
+          selectedImages.some(img => scarringTags.includes(img.description)) ||
+          imageCategories.some(cat => scarringImageCategories.includes(cat) &&
+            selectedImages.filter(img => img.category === cat).some(img =>
+              img.description.toLowerCase().includes('scarring') ||
               img.description.toLowerCase().includes('fibrosing') ||
-              img.description.toLowerCase().includes('cicatricial')
+              img.description.toLowerCase().includes('cicatricial') ||
+              img.description.toLowerCase().includes('lichen') ||
+              img.description.toLowerCase().includes('cellulitis')
             )
           )
       ) {
@@ -131,19 +142,35 @@ export default function AssessmentStep3Page() {
         severity = 'Severe';
       } else if (agaImageCategories.some(cat => imageCategories.includes(cat)) || agaTags.some(tag => tagNames.includes(tag))) {
         classification = 'Permanent Non-Scarring';
-        severity = selectedImages.filter(img => agaImageCategories.includes(img.category)).length > 2 || selectedTags.filter(tag => agaTags.includes(tag.tag)).length > 1 ? 'Moderate to Severe' : 'Moderate';
+        const moderateSeverityIndicators = selectedImages.filter(img => agaImageCategories.includes(img.category)).length;
+        const tagSeverityIndicators = selectedTags.filter(tag => agaTags.includes(tag.tag)).length;
+        if (moderateSeverityIndicators > 2 || tagSeverityIndicators > 1 || (moderateSeverityIndicators > 0 && selectedImages.some(img => parseInt(img.description.split('Stage ')[1]) >=3)) ) {
+            severity = 'Moderate to Severe';
+        } else if (moderateSeverityIndicators > 0 || tagSeverityIndicators > 0) {
+            severity = 'Moderate';
+        } else {
+            severity = 'Mild'; // Default to mild if AGA indicated but minimal signs
+        }
+
       } else if (temporaryTags.some(tag => tagNames.includes(tag)) || selectedImages.some(img => temporaryTags.includes(img.description))) {
         classification = 'Temporary';
-        severity = selectedTags.filter(tag => temporaryTags.includes(tag.tag)).length > 1 ? 'Moderate' : 'Mild to Moderate';
+        const tempTagCount = selectedTags.filter(tag => temporaryTags.includes(tag.tag)).length;
+        const tempImageMatch = selectedImages.some(img => temporaryTags.some(tTag => img.description.includes(tTag)));
+        if (tempTagCount > 1 || (tempTagCount > 0 && tempImageMatch)) {
+            severity = 'Moderate';
+        } else if (tempTagCount > 0 || tempImageMatch) {
+            severity = 'Mild to Moderate';
+        } else {
+             severity = 'Mild';
+        }
       } else if (selectedImages.length > 0 || selectedTags.length > 0) {
-        // Default if some selections are made but don't fit strong categories
-        classification = 'Temporary'; // Or 'Undetermined' if you prefer
+        classification = 'Temporary'; // Default if some selections are made but don't fit strong categories
         severity = 'Mild';
       }
 
 
       const recommendations = generateRecommendations(selectedTags);
-      
+
       const results: AssessmentResults = {
         classification,
         severity,
@@ -152,14 +179,14 @@ export default function AssessmentStep3Page() {
         recommendations,
         generatedAt: new Date().toISOString()
       };
-      
+
       const updatedSessionData: AssessmentData = {
         ...sessionData,
         assessmentResults: results,
         currentStep: 3
       };
       sessionStorage.setItem('assessmentData', JSON.stringify(updatedSessionData));
-      
+
       return results;
 
     } catch (error) {
@@ -247,7 +274,7 @@ export default function AssessmentStep3Page() {
       setIsChatLoading(false);
     }
   };
-  
+
   const classificationBadgeColor = useMemo(() => {
     if (!assessmentResults) return 'default';
     switch (assessmentResults.classification) {
@@ -316,12 +343,12 @@ export default function AssessmentStep3Page() {
               <span className="font-semibold text-foreground">Severity:</span>
               <Badge variant="secondary" className="text-sm px-3 py-1">{assessmentResults.severity}</Badge>
             </div>
-            
+
             {totalSelectedImages > 0 && (
               <div>
                 <h4 className="font-semibold text-foreground mt-3 mb-1">Based on your selected image patterns:</h4>
                 <ul className="list-disc list-inside text-muted-foreground text-sm space-y-0.5">
-                  {Object.entries(assessmentResults.selectedImageSummary).map(([category, descriptions]) => 
+                  {Object.entries(assessmentResults.selectedImageSummary).map(([category, descriptions]) =>
                     descriptions.map(desc => <li key={desc}>{desc} (Category: {category})</li>)
                   )}
                 </ul>
@@ -348,8 +375,8 @@ export default function AssessmentStep3Page() {
               assessmentResults.recommendations.map((rec, index) => (
                 <div key={index} className="p-4 border rounded-lg bg-background shadow-sm">
                   <h4 className="font-semibold text-md text-foreground mb-1 flex items-center">
-                    <CheckCircle2 className="mr-2 h-5 w-5 text-green-600 flex-shrink-0" /> 
-                    {rec.tag} 
+                    <CheckCircle2 className="mr-2 h-5 w-5 text-green-600 flex-shrink-0" />
+                    {rec.tag}
                     <span className="ml-2 text-xs font-normal text-muted-foreground">({rec.category})</span>
                   </h4>
                   <p className="text-sm text-muted-foreground mb-1"><span className="font-medium text-foreground/80">Potential Issue:</span> {rec.issue}</p>
@@ -362,7 +389,7 @@ export default function AssessmentStep3Page() {
             )}
           </CardContent>
         </Card>
-        
+
         <div className="bg-card p-4 md:p-6 rounded-xl shadow-xl mb-8">
           <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center">
             <MessageSquare className="mr-2 h-6 w-6 text-primary"/>
@@ -372,8 +399,8 @@ export default function AssessmentStep3Page() {
             {chatMessages.map(msg => (
               <div key={msg.id} className="mb-2 last:mb-0">
                 <div className={`p-2.5 rounded-xl text-sm w-fit max-w-[80%]
-                  ${msg.sender === 'user' 
-                    ? 'bg-primary text-primary-foreground rounded-tr-sm ml-auto' 
+                  ${msg.sender === 'user'
+                    ? 'bg-primary text-primary-foreground rounded-tr-sm ml-auto'
                     : 'bg-muted text-foreground rounded-tl-sm mr-auto'}`}>
                   <p className="font-semibold mb-0.5">{msg.sender === 'user' ? 'You' : 'AI Assistant'}</p>
                   <p className="whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: msg.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }}></p>
@@ -402,8 +429,8 @@ export default function AssessmentStep3Page() {
               className="flex-grow bg-muted border-transparent rounded-full px-4 py-2.5 text-sm placeholder:text-muted-foreground/80 focus:ring-2 focus:ring-primary focus:border-transparent"
               disabled={isChatLoading || !assessmentResults}
             />
-            <Button 
-              onClick={handleChatSend} 
+            <Button
+              onClick={handleChatSend}
               disabled={isChatLoading || !chatInput.trim() || !assessmentResults}
               size="icon"
               className="bg-primary text-primary-foreground rounded-full p-2.5 w-10 h-10 hover:bg-primary/90 active:scale-95 transition-transform flex-shrink-0"
@@ -421,10 +448,10 @@ export default function AssessmentStep3Page() {
             <Button variant="outline" asChild>
               <Link href="/assessment/step2">Previous</Link>
             </Button>
-            <Button 
-              size="lg" 
+            <Button
+              size="lg"
               asChild
-              // disabled // For now, Step 4 is not ready
+              disabled // Step 4 is not ready
             >
               <Link href="/assessment/step4">Next: Treatment Options</Link>
             </Button>
