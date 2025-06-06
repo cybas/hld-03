@@ -31,7 +31,7 @@ const recommendationMap: Record<string, Omit<RecommendationDetail, 'tag' | 'cate
     impact: 'Often results in significant, diffuse hair shedding (telogen effluvium) a few months after the restrictive period begins.',
     recommendation: 'Resume a balanced, nutrient-dense diet with adequate protein (approx. 1-1.2g per kg of ideal body weight), iron, zinc, and essential fatty acids. Avoid extreme calorie deficits. Consult a nutritionist or doctor for guidance on healthy eating patterns.'
   },
-   'Crash dieting': { // Alias for consistency with user prompt
+   'Crash dieting': { 
     issue: 'Rapid weight loss or severe calorie restriction can lead to acute nutrient deficiencies (e.g., protein, iron, zinc, biotin).',
     impact: 'Often results in significant, diffuse hair shedding (telogen effluvium) a few months after the restrictive period begins.',
     recommendation: 'Resume a balanced, nutrient-dense diet with adequate protein (approx. 1-1.2g per kg of ideal body weight), iron, zinc, and essential fatty acids. Avoid extreme calorie deficits. Consult a nutritionist or doctor for guidance on healthy eating patterns.'
@@ -56,7 +56,6 @@ const recommendationMap: Record<string, Omit<RecommendationDetail, 'tag' | 'cate
     impact: 'While not a direct cause of permanent hair loss, severe or chronic inflammation associated with dandruff can potentially disrupt healthy hair follicle function and exacerbate shedding.',
     recommendation: 'Use over-the-counter anti-dandruff shampoos containing ingredients like ketoconazole, zinc pyrithione, selenium sulfide, or coal tar. If severe or persistent, consult a dermatologist.'
   },
-  // Default placeholder for unmapped tags
   '__DEFAULT__': {
     issue: 'This factor has been identified as potentially contributing to your hair health.',
     impact: 'The specific impact can vary depending on individual circumstances and other combined factors.',
@@ -83,9 +82,8 @@ const summarizeSelections = (selections: (HairLossImage[] | SelectedTag[]), type
   if (!selections) return summary;
 
   selections.forEach(item => {
-    // Ensure item has a category property before trying to access it
     if (item && typeof item === 'object' && 'category' in item) {
-      const category = item.category as string; // Type assertion after check
+      const category = item.category as string; 
       const description = type === 'images' ? (item as HairLossImage).description : (item as SelectedTag).tag;
       if (!summary[category]) {
         summary[category] = [];
@@ -149,7 +147,7 @@ export default function AssessmentStep3Page() {
         } else if (moderateSeverityIndicators > 0 || tagSeverityIndicators > 0) {
             severity = 'Moderate';
         } else {
-            severity = 'Mild'; // Default to mild if AGA indicated but minimal signs
+            severity = 'Mild'; 
         }
 
       } else if (temporaryTags.some(tag => tagNames.includes(tag)) || selectedImages.some(img => temporaryTags.includes(img.description))) {
@@ -164,7 +162,7 @@ export default function AssessmentStep3Page() {
              severity = 'Mild';
         }
       } else if (selectedImages.length > 0 || selectedTags.length > 0) {
-        classification = 'Temporary'; // Default if some selections are made but don't fit strong categories
+        classification = 'Temporary'; 
         severity = 'Mild';
       }
 
@@ -370,20 +368,22 @@ export default function AssessmentStep3Page() {
             </CardTitle>
             <CardDescription>Based on the contributing factors you selected.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent>
             {assessmentResults.recommendations.length > 0 ? (
-              assessmentResults.recommendations.map((rec, index) => (
-                <div key={index} className="p-4 border rounded-lg bg-background shadow-sm">
-                  <h4 className="font-semibold text-md text-foreground mb-1 flex items-center">
-                    <CheckCircle2 className="mr-2 h-5 w-5 text-green-600 flex-shrink-0" />
-                    {rec.tag}
-                    <span className="ml-2 text-xs font-normal text-muted-foreground">({rec.category})</span>
-                  </h4>
-                  <p className="text-sm text-muted-foreground mb-1"><span className="font-medium text-foreground/80">Potential Issue:</span> {rec.issue}</p>
-                  <p className="text-sm text-muted-foreground mb-2"><span className="font-medium text-foreground/80">Possible Impact:</span> {rec.impact}</p>
-                  <p className="text-sm text-foreground bg-primary/5 p-2 rounded-md"><span className="font-medium text-primary">Suggestion:</span> {rec.recommendation}</p>
-                </div>
-              ))
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {assessmentResults.recommendations.map((rec, index) => (
+                  <div key={index} className="p-4 border rounded-lg bg-background shadow-sm flex flex-col h-full">
+                    <h4 className="font-semibold text-md text-foreground mb-1 flex items-center">
+                      <CheckCircle2 className="mr-2 h-5 w-5 text-green-600 flex-shrink-0" />
+                      {rec.tag}
+                      <span className="ml-2 text-xs font-normal text-muted-foreground">({rec.category})</span>
+                    </h4>
+                    <p className="text-sm text-muted-foreground mb-1"><span className="font-medium text-foreground/80">Potential Issue:</span> {rec.issue}</p>
+                    <p className="text-sm text-muted-foreground mb-2"><span className="font-medium text-foreground/80">Possible Impact:</span> {rec.impact}</p>
+                    <p className="text-sm text-foreground bg-primary/5 p-2 rounded-md mt-auto"><span className="font-medium text-primary">Suggestion:</span> {rec.recommendation}</p>
+                  </div>
+                ))}
+              </div>
             ) : (
               <p className="text-muted-foreground">No specific contributing factors selected that map to direct recommendations. Please consult with a healthcare provider for general advice.</p>
             )}
@@ -451,7 +451,7 @@ export default function AssessmentStep3Page() {
             <Button
               size="lg"
               asChild
-              disabled // Step 4 is not ready
+              disabled 
             >
               <Link href="/assessment/step4">Next: Treatment Options</Link>
             </Button>
