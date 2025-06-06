@@ -267,7 +267,6 @@ export default function AssessmentPage() {
       try {
         const parsedImages = JSON.parse(storedImages);
         if (Array.isArray(parsedImages)) {
-          // Basic validation for image objects
           const validImages = parsedImages.filter(img => typeof img === 'object' && img !== null && 'id' in img && 'url' in img && 'description' in img && 'category' in img);
           setSelectedImages(validImages);
         }
@@ -356,121 +355,128 @@ export default function AssessmentPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-4">
-        <Link href="/" className="flex items-center text-primary hover:underline">
-          <ArrowLeft className="mr-2 h-5 w-5" />
-          Back to Home
-        </Link>
-        <span className="text-sm font-medium text-muted-foreground">Step 1 of 4</span>
-      </div>
-      <Progress value={25} className="w-full mb-6" />
+    <>
+      <div className="container mx-auto px-4 py-8 pb-28"> {/* Added pb-28 for sticky footer */}
+        <div className="flex items-center justify-between mb-4">
+          <Link href="/" className="flex items-center text-primary hover:underline">
+            <ArrowLeft className="mr-2 h-5 w-5" />
+            Back to Home
+          </Link>
+          <span className="text-sm font-medium text-muted-foreground">Step 1 of 4</span>
+        </div>
+        <Progress value={25} className="w-full mb-6" />
 
-      <div className="mb-8 text-center">
-        <h1 className="text-2xl font-semibold mb-2 text-foreground">Step 1: Select Images That Match Your Hair Loss Pattern</h1>
-        <p className="text-muted-foreground">Select all images that look similar to your condition.</p>
-      </div>
+        <div className="mb-8 text-center">
+          <h1 className="text-2xl font-semibold mb-2 text-foreground">Step 1: Select Images That Match Your Hair Loss Pattern</h1>
+          <p className="text-muted-foreground">Select all images that look similar to your condition.</p>
+        </div>
 
-      <div className="space-y-10 mb-10">
-        {imageSections.map(section => (
-          <div key={section.title}>
-            <h2 className="text-xl font-semibold mb-4 border-b pb-2 text-foreground">{section.title}</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-              {section.images.map(image => (
-                <div
-                  key={image.id}
-                  onClick={() => toggleImageSelection(image)}
-                  className={`cursor-pointer rounded-lg overflow-hidden border-2 transition-all duration-200 ease-in-out group
-                    ${selectedImages.some(selImg => selImg.id === image.id) ? 'border-primary ring-2 ring-primary shadow-lg' : 'border-transparent hover:border-primary/50 hover:shadow-md'}`}
-                >
-                  <div className="relative w-full aspect-[3/4] bg-muted overflow-hidden rounded-t-md">
-                    <Image
-                      src={image.url}
-                      alt={image.description}
-                      layout="fill"
-                      objectFit="cover"
-                      className="group-hover:scale-105 transition-transform duration-300"
-                    />
+        <div className="space-y-10 mb-10">
+          {imageSections.map(section => (
+            <div key={section.title}>
+              <h2 className="text-xl font-semibold mb-4 border-b pb-2 text-foreground">{section.title}</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                {section.images.map(image => (
+                  <div
+                    key={image.id}
+                    onClick={() => toggleImageSelection(image)}
+                    className={`cursor-pointer rounded-lg overflow-hidden border-2 transition-all duration-200 ease-in-out group
+                      ${selectedImages.some(selImg => selImg.id === image.id) ? 'border-primary ring-2 ring-primary shadow-lg' : 'border-transparent hover:border-primary/50 hover:shadow-md'}`}
+                  >
+                    <div className="relative w-full aspect-[3/4] bg-muted overflow-hidden rounded-t-md">
+                      <Image
+                        src={image.url}
+                        alt={image.description}
+                        layout="fill"
+                        objectFit="cover"
+                        className="group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                    <p className="p-2 text-xs text-center bg-card text-card-foreground rounded-b-md">{image.description}</p>
                   </div>
-                  <p className="p-2 text-xs text-center bg-card text-card-foreground rounded-b-md">{image.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-      
-      <div className="bg-card p-4 md:p-6 rounded-xl shadow-xl mb-8">
-        <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center">
-          <MessageSquare className="mr-2 h-6 w-6 text-primary"/>
-          Chat About Your Image Selections
-        </h3>
-        <ScrollArea className="h-60 mb-4 border rounded-lg p-3 bg-background chat-scroll-area">
-          {chatMessages.length === 0 && !isChatLoading && (
-            <div className="flex flex-col items-center justify-center h-full">
-              <MessageSquare className="w-12 h-12 text-muted-foreground/50 mb-2" />
-              <p className="text-sm text-muted-foreground text-center">
-                Select images above and then ask questions here.
-              </p>
-            </div>
-          )}
-          {chatMessages.map(msg => (
-            <div key={msg.id} className="mb-2 last:mb-0">
-              <div className={`p-2.5 rounded-xl text-sm w-fit max-w-[80%]
-                ${msg.sender === 'user' 
-                  ? 'bg-primary text-primary-foreground rounded-tr-sm ml-auto' 
-                  : 'bg-muted text-foreground rounded-tl-sm mr-auto'}`}>
-                <p className="font-semibold mb-0.5">{msg.sender === 'user' ? 'You' : 'AI Assistant'}</p>
-                <p className="whitespace-pre-wrap">{msg.text}</p>
-                <span className="text-xs text-muted-foreground/70 mt-1 block text-right">
-                  {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </span>
+                ))}
               </div>
             </div>
           ))}
-          {isChatLoading && (
-            <div className="flex items-center p-2.5">
-                <div className="h-2 w-2 animate-dot-pulse-before rounded-full bg-muted-foreground [animation-delay:-0.3s] mr-1"></div>
-                <div className="h-2 w-2 animate-dot-pulse rounded-full bg-muted-foreground [animation-delay:-0.15s] mr-1"></div>
-                <div className="h-2 w-2 animate-dot-pulse-after rounded-full bg-muted-foreground"></div>
-                <span className="ml-2 text-sm text-muted-foreground">AI is thinking...</span>
-            </div>
-          )}
-        </ScrollArea>
-        <div className="flex items-center gap-2 mt-4">
-          <Input
-            type="text"
-            value={chatInput}
-            onChange={(e) => setChatInput(e.target.value)}
-            placeholder="Ask about your selected patterns..."
-            onKeyPress={(e) => e.key === 'Enter' && !isChatLoading && handleChatSend()}
-            className="flex-grow bg-muted border-transparent rounded-full px-4 py-2.5 text-sm placeholder:text-muted-foreground/80 focus:ring-2 focus:ring-primary focus:border-transparent"
-            disabled={isChatLoading}
-          />
-          <Button 
-            onClick={handleChatSend} 
-            disabled={isChatLoading || !chatInput.trim()} 
-            size="icon"
-            className="bg-primary text-primary-foreground rounded-full p-2.5 w-10 h-10 hover:bg-primary/90 active:scale-95 transition-transform flex-shrink-0"
-            aria-label="Send message"
-          >
-            <SendHorizontal className="h-5 w-5" />
-          </Button>
+        </div>
+        
+        <div className="bg-card p-4 md:p-6 rounded-xl shadow-xl mb-8">
+          <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center">
+            <MessageSquare className="mr-2 h-6 w-6 text-primary"/>
+            Chat About Your Image Selections
+          </h3>
+          <ScrollArea className="h-60 mb-4 border rounded-lg p-3 bg-background chat-scroll-area">
+            {chatMessages.length === 0 && !isChatLoading && (
+              <div className="flex flex-col items-center justify-center h-full">
+                <MessageSquare className="w-12 h-12 text-muted-foreground/50 mb-2" />
+                <p className="text-sm text-muted-foreground text-center">
+                  Select images above and then ask questions here.
+                </p>
+              </div>
+            )}
+            {chatMessages.map(msg => (
+              <div key={msg.id} className="mb-2 last:mb-0">
+                <div className={`p-2.5 rounded-xl text-sm w-fit max-w-[80%]
+                  ${msg.sender === 'user' 
+                    ? 'bg-primary text-primary-foreground rounded-tr-sm ml-auto' 
+                    : 'bg-muted text-foreground rounded-tl-sm mr-auto'}`}>
+                  <p className="font-semibold mb-0.5">{msg.sender === 'user' ? 'You' : 'AI Assistant'}</p>
+                  <p className="whitespace-pre-wrap">{msg.text}</p>
+                  <span className="text-xs text-muted-foreground/70 mt-1 block text-right">
+                    {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+              </div>
+            ))}
+            {isChatLoading && (
+              <div className="flex items-center p-2.5">
+                  <div className="h-2 w-2 animate-dot-pulse-before rounded-full bg-muted-foreground [animation-delay:-0.3s] mr-1"></div>
+                  <div className="h-2 w-2 animate-dot-pulse rounded-full bg-muted-foreground [animation-delay:-0.15s] mr-1"></div>
+                  <div className="h-2 w-2 animate-dot-pulse-after rounded-full bg-muted-foreground"></div>
+                  <span className="ml-2 text-sm text-muted-foreground">AI is thinking...</span>
+              </div>
+            )}
+          </ScrollArea>
+          <div className="flex items-center gap-2 mt-4">
+            <Input
+              type="text"
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              placeholder="Ask about your selected patterns..."
+              onKeyPress={(e) => e.key === 'Enter' && !isChatLoading && handleChatSend()}
+              className="flex-grow bg-muted border-transparent rounded-full px-4 py-2.5 text-sm placeholder:text-muted-foreground/80 focus:ring-2 focus:ring-primary focus:border-transparent"
+              disabled={isChatLoading}
+            />
+            <Button 
+              onClick={handleChatSend} 
+              disabled={isChatLoading || !chatInput.trim()} 
+              size="icon"
+              className="bg-primary text-primary-foreground rounded-full p-2.5 w-10 h-10 hover:bg-primary/90 active:scale-95 transition-transform flex-shrink-0"
+              aria-label="Send message"
+            >
+              <SendHorizontal className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
       </div>
 
-      <div className="text-center">
-        <Button 
-          size="lg" 
-          disabled={selectedImages.length === 0}
-          onClick={() => alert("Next Step functionality to be implemented.")} 
-          className="w-full sm:w-auto"
-        >
-          Next Step
-        </Button>
-        {selectedImages.length === 0 && <p className="text-sm text-muted-foreground mt-2">Please select at least one image to proceed.</p>}
+      {/* Sticky Footer for Next Step Button */}
+      <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border shadow-up-md z-10">
+        <div className="container mx-auto px-4 py-4">
+          <div className="text-center">
+            <Button 
+              size="lg" 
+              disabled={selectedImages.length === 0}
+              onClick={() => alert("Next Step functionality to be implemented.")} 
+              className="w-full sm:w-auto"
+            >
+              Next Step
+            </Button>
+            {selectedImages.length === 0 && <p className="text-sm text-muted-foreground mt-2">Please select at least one image to proceed.</p>}
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
     
