@@ -84,14 +84,14 @@ const scalpConditionTags = [
 ];
 
 const tagCategories = [
-  { title: 'DIET & NUTRITION', tags: dietNutritionTags, icon: ClipboardList },
-  { title: 'MEDICATIONS & DRUGS', tags: medicationTags, icon: Pill },
-  { title: 'EXTERNAL FACTORS', tags: externalFactorTags, icon: Globe },
-  { title: 'HAIRCARE HABITS', tags: haircareHabitTags, icon: Scissors },
-  { title: 'HORMONAL FACTORS', tags: hormonalFactorTags, icon: Dna },
-  { title: 'MENTAL HEALTH', tags: mentalHealthTags, icon: Brain },
-  { title: 'PHYSICAL ACTIVITY', tags: physicalActivityTags, icon: Bike },
-  { title: 'SCALP CONDITIONS', tags: scalpConditionTags, icon: Microscope },
+  { title: 'DIET & NUTRITION', tags: dietNutritionTags, icon: ClipboardList, id: 'diet' },
+  { title: 'MEDICATIONS & DRUGS', tags: medicationTags, icon: Pill, id: 'medications' },
+  { title: 'EXTERNAL FACTORS', tags: externalFactorTags, icon: Globe, id: 'external' },
+  { title: 'HAIRCARE HABITS', tags: haircareHabitTags, icon: Scissors, id: 'haircare' },
+  { title: 'HORMONAL FACTORS', tags: hormonalFactorTags, icon: Dna, id: 'hormonal' },
+  { title: 'MENTAL HEALTH', tags: mentalHealthTags, icon: Brain, id: 'mental' },
+  { title: 'PHYSICAL ACTIVITY', tags: physicalActivityTags, icon: Bike, id: 'physical' },
+  { title: 'SCALP CONDITIONS', tags: scalpConditionTags, icon: Microscope, id: 'scalp' },
 ];
 
 export default function AssessmentStep2Page() {
@@ -131,7 +131,7 @@ export default function AssessmentStep2Page() {
       }
       
       const currentAssessmentDataString = sessionStorage.getItem('assessmentData');
-      let currentAssessmentData: AssessmentData = { selectedImages: [], selectedTags: [], currentStep: 1 }; // Default structure
+      let currentAssessmentData: Partial<AssessmentData> = {};
       if (currentAssessmentDataString) {
         try {
           currentAssessmentData = JSON.parse(currentAssessmentDataString);
@@ -139,9 +139,10 @@ export default function AssessmentStep2Page() {
       }
 
       const assessmentUpdate: AssessmentData = {
-        selectedImages: currentAssessmentData.selectedImages || [], // Ensure selectedImages is always an array
+        selectedImages: currentAssessmentData.selectedImages || [],
         selectedTags: newSelection,
-        currentStep: 2
+        currentStep: 2,
+        assessmentResults: currentAssessmentData.assessmentResults // Preserve results if they exist
       };
       sessionStorage.setItem('assessmentData', JSON.stringify(assessmentUpdate));
       
@@ -152,12 +153,13 @@ export default function AssessmentStep2Page() {
   const getChatContext = () => {
     const storedDataString = sessionStorage.getItem('assessmentData');
     let imagesForContext: HairLossImage[] = selectedImagesFromSession; 
+    let currentAssessmentData: Partial<AssessmentData> = {};
     
     if (storedDataString) {
         try {
-            const storedData: AssessmentData = JSON.parse(storedDataString);
-            if(storedData.selectedImages) {
-                imagesForContext = storedData.selectedImages;
+            currentAssessmentData = JSON.parse(storedDataString);
+            if(currentAssessmentData.selectedImages) {
+                imagesForContext = currentAssessmentData.selectedImages;
             }
         } catch (e) { console.error("Error parsing assessmentData for chat context", e); }
     }
@@ -165,7 +167,8 @@ export default function AssessmentStep2Page() {
     return {
       currentStep: 2,
       selectedImages: imagesForContext.map(img => ({id: img.id, description: img.description, category: img.category})),
-      selectedTags: selectedTags 
+      selectedTags: selectedTags,
+      assessmentResults: currentAssessmentData.assessmentResults || null
     };
   };
 
@@ -244,7 +247,7 @@ export default function AssessmentStep2Page() {
 
         <div className="space-y-8 mb-10">
           {tagCategories.map(category => (
-            <div key={category.title}>
+            <div key={category.id}>
               <h2 className="text-xl font-semibold mb-3 flex items-center text-foreground">
                 <category.icon className="mr-2 h-5 w-5 text-primary" />
                 {category.title}
@@ -259,7 +262,7 @@ export default function AssessmentStep2Page() {
                     className={`rounded-full py-1.5 px-4 text-sm transition-colors h-auto
                       ${selectedTags.some(t => t.tag === tag && t.category === category) 
                         ? 'bg-primary text-primary-foreground hover:bg-primary/90' 
-                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200'}`}
+                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-700 border-slate-200'}`}
                   >
                     {tag}
                   </Button>
@@ -349,5 +352,4 @@ export default function AssessmentStep2Page() {
     </>
   );
 }
-
     
