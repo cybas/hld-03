@@ -14,7 +14,7 @@ export function HeroSection() {
         </p>
         <div className="mt-10 flex items-center justify-center gap-x-6">
           <Button asChild size="lg" className="px-8 py-3 text-base md:text-lg bg-primary text-primary-foreground hover:bg-primary/90">
-            <Link href="/assessment">Start Hair Loss Assessment</Link>
+            <Link href="/assessment/step1">Start Hair Loss Assessment</Link>
           </Button>
           <Button variant="outline" size="lg" asChild className="px-8 py-3 text-base md:text-lg border-primary text-primary hover:bg-primary/5 hover:text-primary">
             <Link href="/ai-chat">Chat with Hair Loss AI</Link>
@@ -24,3 +24,5 @@ export function HeroSection() {
     </section>
   );
 }
+
+    

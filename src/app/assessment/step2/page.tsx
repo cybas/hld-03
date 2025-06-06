@@ -131,7 +131,7 @@ export default function AssessmentStep2Page() {
       }
       
       const currentAssessmentDataString = sessionStorage.getItem('assessmentData');
-      let currentAssessmentData: AssessmentData = {};
+      let currentAssessmentData: AssessmentData = { selectedImages: [], selectedTags: [], currentStep: 1 }; // Default structure
       if (currentAssessmentDataString) {
         try {
           currentAssessmentData = JSON.parse(currentAssessmentDataString);
@@ -139,7 +139,7 @@ export default function AssessmentStep2Page() {
       }
 
       const assessmentUpdate: AssessmentData = {
-        ...currentAssessmentData, // Preserve other data like selectedImages
+        selectedImages: currentAssessmentData.selectedImages || [], // Ensure selectedImages is always an array
         selectedTags: newSelection,
         currentStep: 2
       };
@@ -151,7 +151,7 @@ export default function AssessmentStep2Page() {
 
   const getChatContext = () => {
     const storedDataString = sessionStorage.getItem('assessmentData');
-    let imagesForContext: HairLossImage[] = selectedImagesFromSession; // Use state loaded on mount
+    let imagesForContext: HairLossImage[] = selectedImagesFromSession; 
     
     if (storedDataString) {
         try {
@@ -165,7 +165,7 @@ export default function AssessmentStep2Page() {
     return {
       currentStep: 2,
       selectedImages: imagesForContext.map(img => ({id: img.id, description: img.description, category: img.category})),
-      selectedTags: selectedTags // Current state of selected tags on this page
+      selectedTags: selectedTags 
     };
   };
 
@@ -227,9 +227,9 @@ export default function AssessmentStep2Page() {
 
   return (
     <>
-      <div className="container mx-auto px-4 py-8 pb-28"> {/* Added pb-28 for sticky footer compatibility */}
+      <div className="container mx-auto px-4 py-8 pb-28"> 
         <div className="flex items-center justify-between mb-4">
-          <Link href="/assessment" className="flex items-center text-primary hover:underline">
+          <Link href="/assessment/step1" className="flex items-center text-primary hover:underline">
             <ArrowLeft className="mr-2 h-5 w-5" />
             Back
           </Link>
@@ -329,19 +329,18 @@ export default function AssessmentStep2Page() {
         </div>
       </div>
 
-      {/* Sticky Footer for Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border shadow-up-md z-10">
         <div className="container mx-auto px-4 py-3">
           <div className="flex justify-between items-center">
             <Button variant="outline" asChild>
-              <Link href="/assessment">Previous</Link>
+              <Link href="/assessment/step1">Previous</Link>
             </Button>
             <Button 
               size="lg" 
               disabled={selectedTags.length === 0}
-              onClick={() => alert("Next Step (to Step 3) functionality to be implemented.")} 
+              asChild
             >
-              Next Step
+              <Link href="/assessment/step3">Next Step</Link>
             </Button>
           </div>
            {selectedTags.length === 0 && <p className="text-xs text-muted-foreground mt-1 text-center">Please select at least one factor to proceed.</p>}
@@ -350,3 +349,5 @@ export default function AssessmentStep2Page() {
     </>
   );
 }
+
+    
