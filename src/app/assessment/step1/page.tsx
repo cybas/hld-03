@@ -249,9 +249,22 @@ const imageSections = [
 
 const formatAIResponse = (text: string) => {
   return text
+    // Remove asterisks
     .replace(/\*\*/g, '')
+    .replace(/\*/g, '')
+    
+    // Fix the bullet/number mixing - convert ALL to bullets
+    .replace(/^\s*\d+\.\s*/gm, '• ')     // "1. " → "• "
+    .replace(/^\s*-\s*/gm, '• ')         // "- " → "• "
+    .replace(/^\s*\*\s*/gm, '• ')        // "* " → "• "
+    
+    // Clean up multiple line breaks
+    .replace(/\n\n\n+/g, '\n\n')
+    
+    // Clean up spacing
     .replace(/\s+/g, ' ')
-    .replace(/\n\n+/g, '\n\n')
+    .replace(/\n\s+/g, '\n')
+    
     .trim();
 };
 
@@ -491,4 +504,6 @@ export default function AssessmentStep1Page() {
     </>
   );
 }
+    
+
     
