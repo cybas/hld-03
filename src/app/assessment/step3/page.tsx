@@ -95,31 +95,28 @@ const summarizeSelections = (selections: (HairLossImage[] | SelectedTag[]), type
 };
 
 const formatAIResponse = (text: string): string => {
-  console.log('Original AWS response:', text);
-  let formatted = text
-    .replace(/\*+/g, '') 
-    .replace(/\s+/g, ' ') 
-    .trim();
-  
-  if (formatted.includes('based on') || formatted.includes('selected')) {
-    const sentences = formatted.split(/[.!?]+/).filter(s => s.trim());
-    console.log('After basic cleanup:', formatted);
-    
-    if (sentences.length >= 2) {
-      let result = `**Based on Your Assessment**: ${sentences[0].trim()}\n\n`;
-      result += `**Key Points**:\n`;
-      
-      for (let i = 1; i < Math.min(sentences.length, 4); i++) {
-        if (sentences[i].trim().length > 10) {
-          result += `• ${sentences[i].trim()}\n`;
-        }
-      }
-      
-      return result;
-    }
+  // If already properly formatted, return as-is
+  if (text.includes('**Based on Your Assessment**') && text.includes('•')) {
+    return text;
   }
   
-  return formatted;
+  // Force format wall-of-text responses
+  const sections = text.split(/[.!?]\s+/);
+  
+  if (sections.length > 3) {
+    // Create structured format
+    const intro = sections[0] + '.';
+    const points = sections.slice(1, Math.min(6, sections.length)).map(s => `• ${s.trim()}.`);
+    
+    return `**Based on Your Assessment**: ${intro}
+
+**Key Points**:
+${points.join('\n')}
+
+**Next Steps**: Consider discussing specific treatments that interest you most.`;
+  }
+  
+  return text;
 };
 
 
@@ -229,13 +226,15 @@ export default function AssessmentStep3Page() {
       const numImageSelections = Object.values(results.selectedImageSummary || {}).reduce((acc, arr) => acc + arr.length, 0);
       const numTagSelections = Object.values(results.contributingFactorsSummary || {}).reduce((acc, arr) => acc + arr.length, 0);
 
-      const initialAiMessage: Message = {
+      const initialAiMessageText = `Based on your assessment, your hair loss appears to be primarily classified as **${results.classification}** with a **${results.severity}** severity. I've analyzed your ${numImageSelections} selected image pattern(s) and ${numTagSelections} contributing factor(s). Would you like me to explain these results in more detail or discuss specific recommendations?`;
+      
+      const aiMessage: Message = {
         id: 'initial-assessment-msg',
         sender: 'ai',
         timestamp: new Date(),
-        text: `Based on your assessment, your hair loss appears to be primarily classified as **${results.classification}** with a **${results.severity}** severity. I've analyzed your ${numImageSelections} selected image pattern(s) and ${numTagSelections} contributing factor(s). Would you like me to explain these results in more detail or discuss specific recommendations?`
+        text: formatAIResponse(initialAiMessageText) // Format this initial message too
       };
-      setChatMessages([initialAiMessage]);
+      setChatMessages([aiMessage]);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -248,7 +247,7 @@ export default function AssessmentStep3Page() {
       const sessionData: AssessmentData = JSON.parse(storedDataString);
       return {
         currentStep: 3,
-        selectedImages: sessionData.selectedImages || [],
+        selectedImages: (sessionData.selectedImages || []).map(img => ({id: img.id, description: img.description, category: img.category})),
         selectedTags: sessionData.selectedTags || [],
         assessmentResults: sessionData.assessmentResults || null
       };
@@ -271,7 +270,6 @@ export default function AssessmentStep3Page() {
     setIsChatLoading(true);
 
     const context = getChatContext();
-    console.log('Context being sent to AWS:', context);
 
     try {
       const response = await fetch('/api/bedrock-chat', {
@@ -282,7 +280,6 @@ export default function AssessmentStep3Page() {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Raw AWS response:', data.response);
         const cleanResponse = formatAIResponse(data.response);
         const aiMessage: Message = {
           id: `${Date.now()}-ai`,
@@ -496,3 +493,4 @@ export default function AssessmentStep3Page() {
   );
 }
 
+    

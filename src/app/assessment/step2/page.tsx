@@ -96,31 +96,28 @@ const tagCategories = [
 ];
 
 const formatAIResponse = (text: string): string => {
-  console.log('Original AWS response:', text);
-  let formatted = text
-    .replace(/\*+/g, '') 
-    .replace(/\s+/g, ' ') 
-    .trim();
-  
-  if (formatted.includes('based on') || formatted.includes('selected')) {
-    const sentences = formatted.split(/[.!?]+/).filter(s => s.trim());
-    console.log('After basic cleanup:', formatted);
-    
-    if (sentences.length >= 2) {
-      let result = `**Based on Your Assessment**: ${sentences[0].trim()}\n\n`;
-      result += `**Key Points**:\n`;
-      
-      for (let i = 1; i < Math.min(sentences.length, 4); i++) {
-        if (sentences[i].trim().length > 10) {
-          result += `• ${sentences[i].trim()}\n`;
-        }
-      }
-      
-      return result;
-    }
+  // If already properly formatted, return as-is
+  if (text.includes('**Based on Your Assessment**') && text.includes('•')) {
+    return text;
   }
   
-  return formatted;
+  // Force format wall-of-text responses
+  const sections = text.split(/[.!?]\s+/);
+  
+  if (sections.length > 3) {
+    // Create structured format
+    const intro = sections[0] + '.';
+    const points = sections.slice(1, Math.min(6, sections.length)).map(s => `• ${s.trim()}.`);
+    
+    return `**Based on Your Assessment**: ${intro}
+
+**Key Points**:
+${points.join('\n')}
+
+**Next Steps**: Consider discussing specific treatments that interest you most.`;
+  }
+  
+  return text;
 };
 
 export default function AssessmentStep2Page() {
@@ -225,7 +222,6 @@ export default function AssessmentStep2Page() {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Raw AWS response:', data.response);
         const cleanResponse = formatAIResponse(data.response);
         const aiMessage: Message = {
           id: `${Date.now()}-ai`,
@@ -295,7 +291,7 @@ export default function AssessmentStep2Page() {
                       className={cn(
                         "rounded-full py-1.5 px-4 text-sm transition-colors h-auto",
                         isSelected 
-                          ? 'border-primary hover:bg-primary/90' 
+                          ? 'border-primary text-primary-foreground hover:bg-primary/90' 
                           : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200 hover:text-slate-700'
                       )}
                     >
@@ -391,4 +387,6 @@ export default function AssessmentStep2Page() {
     </>
   );
 }
+    
+
     
