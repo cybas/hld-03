@@ -77,36 +77,54 @@ interface ChatInterfaceProps {
   setMessages: (value: Message[] | ((val: Message[]) => Message[])) => void;
 }
 
-const formatAIResponse = (text: string): string => {
-  console.log('Original AWS response:', text);
-
-  let formatted = text
-    .replace(/\*+/g, '') 
-    .replace(/\s+/g, ' ') 
-    .trim();
+const formatAIResponse = (text: string) => {
+  // Remove extra spaces and clean up
+  let formatted = text.replace(/\s+/g, ' ').trim();
   
-  console.log('After basic cleanup:', formatted);
-
-  if (formatted.includes('based on') || formatted.includes('selected')) {
-    const sentences = formatted.split(/[.!?]+/).filter(s => s.trim());
-    
-    if (sentences.length >= 2) {
-      let result = `**Based on Your Assessment**: ${sentences[0].trim()}\n\n`;
-      result += `**Key Points**:\n`;
-      
-      for (let i = 1; i < Math.min(sentences.length, 4); i++) {
-        if (sentences[i].trim().length > 10) {
-          result += `• ${sentences[i].trim()}\n`;
-        }
-      }
-      
-      console.log('Formatted result:', result);
-      return result;
+  // Split into sentences
+  const sentences = formatted.split(/\. (?=[A-Z])/);
+  
+  // Process each sentence and group them
+  let result = '';
+  let currentSection = '';
+  
+  sentences.forEach((sentence, index) => {
+    // Clean the sentence
+    sentence = sentence.trim();
+    if (!sentence.endsWith('.') && index < sentences.length - 1) {
+      sentence += '.';
     }
-  }
+    
+    // Identify different types of content
+    if (sentence.includes('pattern baldness') || sentence.includes('AGA') || sentence.includes('identified')) {
+      result += `**Assessment**: ${sentence}\n\n`;
+    }
+    else if (sentence.includes('Minoxidil') || sentence.includes('Finasteride') || sentence.includes('Microneedling')) {
+      if (!currentSection.includes('Treatment Options')) {
+        result += `**Treatment Options**:\n`;
+        currentSection = 'Treatment Options';
+      }
+      result += `• ${sentence}\n`;
+    }
+    else if (sentence.includes('Biotin') || sentence.includes('supplements') || sentence.includes('Scalp massage') || sentence.includes('Stress management')) {
+      if (!currentSection.includes('Lifestyle Support')) {
+        result += `\n**Lifestyle Support**:\n`;
+        currentSection = 'Lifestyle Support';
+      }
+      result += `• ${sentence}\n`;
+    }
+    else if (sentence.includes('Consider discussing') || sentence.includes('healthcare provider')) {
+      result += `\n**Important**: ${sentence}\n`;
+    }
+    else if (sentence.includes('Would you like') || sentence.includes('finding specialists')) {
+      result += `\n**Next Steps**: ${sentence}`;
+    }
+    else {
+      result += `${sentence} `;
+    }
+  });
   
-  console.log('No formatting applied, returning:', formatted);
-  return formatted;
+  return result.trim();
 };
 
 export function ChatInterface({ displayMode = 'page', onClose, messages, setMessages }: ChatInterfaceProps) {
@@ -288,3 +306,4 @@ export function ChatInterface({ displayMode = 'page', onClose, messages, setMess
     </div>
   );
 }
+
