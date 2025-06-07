@@ -374,7 +374,7 @@ export default function AssessmentStep2Page() {
       <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border shadow-up-md z-10">
         <div className="container mx-auto px-4 py-3">
           <div className="flex justify-between items-center">
-            <Button variant="outline" asChild>
+            <Button variant="outline" asChild className="border-primary text-primary hover:bg-primary/10">
               <Link href="/assessment/step1">Previous</Link>
             </Button>
             <Button 
