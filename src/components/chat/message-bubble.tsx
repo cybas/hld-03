@@ -35,8 +35,8 @@ export function MessageBubble({ message }: MessageBubbleProps) {
         )}
         {message.id !== 'typing' && (
             <p className={cn(
-                "text-xs mt-1.5 text-right", // Always right for timestamp inside bubble
-                isUser ? "text-primary-foreground" : "text-muted-foreground"
+                "text-xs mt-1.5 text-right",
+                isUser ? "text-white" : "text-muted-foreground" // Changed to text-white for user
               )}>
               {format(new Date(message.timestamp), 'p')}
             </p>
