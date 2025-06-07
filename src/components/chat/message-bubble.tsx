@@ -11,6 +11,11 @@ interface MessageBubbleProps {
 export function MessageBubble({ message }: MessageBubbleProps) {
   const isUser = message.sender === 'user';
 
+  // Function to replace **text** with <strong>text</strong>
+  const formatBoldText = (text: string) => {
+    return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  };
+
   return (
     <div className={cn('flex items-end space-x-2 group', isUser ? 'justify-end' : 'justify-start')}>
       {!isUser && (
@@ -31,7 +36,10 @@ export function MessageBubble({ message }: MessageBubbleProps) {
         {message.id === 'typing' ? (
           null 
         ) : (
-          <p className="whitespace-pre-wrap">{message.text}</p>
+          // Use dangerouslySetInnerHTML for AI messages to render bold, and simple p for user messages
+          isUser 
+            ? <p className="whitespace-pre-wrap">{message.text}</p>
+            : <p className="whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: formatBoldText(message.text) }}></p>
         )}
         {message.id !== 'typing' && (
             <p className={cn(

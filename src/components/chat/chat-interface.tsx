@@ -66,7 +66,7 @@ const actionCards = [
     icon: <ClipboardIcon />,
     title: 'Start Complete Assessment',
     description: 'Full 4-step hair loss evaluation',
-    action: 'Start hair loss assessment',
+    action: 'Start hair loss assessment', // This will trigger /assessment/step1
   },
 ];
 
@@ -76,6 +76,32 @@ interface ChatInterfaceProps {
   messages: Message[];
   setMessages: (value: Message[] | ((val: Message[]) => Message[])) => void;
 }
+
+const formatAIResponse = (text: string): string => {
+  let formatted = text
+    .replace(/\*+/g, '') 
+    .replace(/\s+/g, ' ') 
+    .trim();
+  
+  if (formatted.includes('based on') || formatted.includes('selected')) {
+    const sentences = formatted.split(/[.!?]+/).filter(s => s.trim());
+    
+    if (sentences.length >= 2) {
+      let result = `**Based on Your Assessment**: ${sentences[0].trim()}\n\n`;
+      result += `**Key Points**:\n`;
+      
+      for (let i = 1; i < Math.min(sentences.length, 4); i++) {
+        if (sentences[i].trim().length > 10) {
+          result += `• ${sentences[i].trim()}\n`;
+        }
+      }
+      
+      return result;
+    }
+  }
+  
+  return formatted;
+};
 
 export function ChatInterface({ displayMode = 'page', onClose, messages, setMessages }: ChatInterfaceProps) {
   const [isLoading, setIsLoading] = useState(false);
@@ -114,16 +140,19 @@ export function ChatInterface({ displayMode = 'page', onClose, messages, setMess
     return "I'm here to help with hair loss questions. Could you tell me more about what you'd like to know? Please remember, this information is for educational purposes. Consider discussing with your healthcare provider or a dermatologist for personalized medical advice and diagnosis.";
   };
 
-  // Placeholder for the function to prepare agent context
   const prepareAgentContext = (messages: Message[]) => {
-    // In a real application, this function would prepare
-    // the conversation history and potentially other relevant
-    // information to send to the AI model.
-    // For now, it just returns the user's latest message.
     return messages[messages.length - 1]?.text || '';
   };
 
   const handleSendMessage = async (text: string) => {
+    if (text.trim() === 'Start hair loss assessment') {
+        // Special handling for this action card to navigate
+        // In a real app, this would use Next.js router or Link component
+        // For now, we'll just log it. Ideally, this action card would be a Link.
+        window.location.href = '/assessment/step1';
+        return;
+    }
+
     const userMessage: Message = {
       id: Date.now().toString(),
       text,
@@ -134,28 +163,28 @@ export function ChatInterface({ displayMode = 'page', onClose, messages, setMess
     setIsLoading(true);
 
     try {
-      // Prepare context for the AI (using placeholder for now)
       const context = prepareAgentContext([...messages, userMessage]);
 
       const response = await fetch('/api/bedrock-chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: context }), // Send prepared context
+        body: JSON.stringify({ message: context }), 
       });
 
       if (response.ok) {
         const data = await response.json();
-        const aiMessage: Message = { id: `${Date.now()}-ai`, text: data.response, sender: 'ai', timestamp: new Date() };
+        const cleanResponse = formatAIResponse(data.response);
+        const aiMessage: Message = { id: `${Date.now()}-ai`, text: cleanResponse, sender: 'ai', timestamp: new Date() };
         setMessages((prevMessages) => [...prevMessages, aiMessage]);
       } else {
         throw new Error(`API call failed with status: ${response.status}`);
       }
     } catch (error) {
       console.error('Chat error:', error);
-      // Fallback to placeholder response
       const fallbackResponse = getPlaceholderResponse(text);
-      const aiMessage: Message = { id: `${Date.now()}-fallback`, text: fallbackResponse, sender: 'ai', timestamp: new Date() };
- setMessages((prevMessages) => [...prevMessages, aiMessage]);
+      const cleanFallbackResponse = formatAIResponse(fallbackResponse);
+      const aiMessage: Message = { id: `${Date.now()}-fallback`, text: cleanFallbackResponse, sender: 'ai', timestamp: new Date() };
+      setMessages((prevMessages) => [...prevMessages, aiMessage]);
     } finally {
       setIsLoading(false);
       setTimeout(() => inputRef.current?.focus(), 0);
@@ -181,8 +210,13 @@ export function ChatInterface({ displayMode = 'page', onClose, messages, setMess
             <button
               key={card.title}
               onClick={() => {
-                handleSendMessage(card.action);
-                setTimeout(() => inputRef.current?.focus(), 0);
+                 if (card.action === 'Start hair loss assessment') {
+                  // Direct navigation for this specific card
+                  window.location.href = '/assessment/step1';
+                } else {
+                  handleSendMessage(card.action);
+                  setTimeout(() => inputRef.current?.focus(), 0);
+                }
               }}
               className="bg-white/80 border border-primary/10 hover:border-primary/20 rounded-2xl p-6 shadow-action-card-premium hover:shadow-action-card-premium-hover hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300 ease-premium-ease flex flex-col items-start text-left group active:scale-[0.98]"
             >

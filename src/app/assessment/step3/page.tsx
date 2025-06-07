@@ -94,6 +94,32 @@ const summarizeSelections = (selections: (HairLossImage[] | SelectedTag[]), type
   return summary;
 };
 
+const formatAIResponse = (text: string): string => {
+  let formatted = text
+    .replace(/\*+/g, '') 
+    .replace(/\s+/g, ' ') 
+    .trim();
+  
+  if (formatted.includes('based on') || formatted.includes('selected')) {
+    const sentences = formatted.split(/[.!?]+/).filter(s => s.trim());
+    
+    if (sentences.length >= 2) {
+      let result = `**Based on Your Assessment**: ${sentences[0].trim()}\n\n`;
+      result += `**Key Points**:\n`;
+      
+      for (let i = 1; i < Math.min(sentences.length, 4); i++) {
+        if (sentences[i].trim().length > 10) {
+          result += `• ${sentences[i].trim()}\n`;
+        }
+      }
+      
+      return result;
+    }
+  }
+  
+  return formatted;
+};
+
 
 export default function AssessmentStep3Page() {
   const [assessmentResults, setAssessmentResults] = useState<AssessmentResults | null>(null);
@@ -253,9 +279,10 @@ export default function AssessmentStep3Page() {
 
       if (response.ok) {
         const data = await response.json();
+        const cleanResponse = formatAIResponse(data.response);
         const aiMessage: Message = {
           id: `${Date.now()}-ai`,
-          text: data.response,
+          text: cleanResponse,
           sender: 'ai',
           timestamp: new Date(),
         };
@@ -403,7 +430,10 @@ export default function AssessmentStep3Page() {
                     ? 'bg-primary text-primary-foreground rounded-tr-sm ml-auto'
                     : 'bg-muted text-foreground rounded-tl-sm mr-auto'}`}>
                   <p className="font-semibold mb-0.5">{msg.sender === 'user' ? 'You' : 'AI Assistant'}</p>
-                  <p className="whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: msg.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }}></p>
+                  {msg.sender === 'user' 
+                    ? <p className="whitespace-pre-wrap">{msg.text}</p>
+                    : <p className="whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: msg.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }}></p>
+                  }
                   <span className="text-xs text-muted-foreground/70 mt-1 block text-right">
                     {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
