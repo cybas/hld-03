@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ArrowLeft, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatAIResponse } from '@/utils/responseFormatter';
 
 // SVG Icons for Action Cards
 const MicroscopeIcon = () => (
@@ -66,7 +67,7 @@ const actionCards = [
     icon: <ClipboardIcon />,
     title: 'Start Complete Assessment',
     description: 'Full 4-step hair loss evaluation',
-    action: 'Start hair loss assessment', // This will trigger /assessment/step1
+    action: 'Start hair loss assessment', 
   },
 ];
 
@@ -76,27 +77,6 @@ interface ChatInterfaceProps {
   messages: Message[];
   setMessages: (value: Message[] | ((val: Message[]) => Message[])) => void;
 }
-
-const formatAIResponse = (text: string) => {
-  return text
-    // Remove asterisks
-    .replace(/\*\*/g, '')
-    .replace(/\*/g, '')
-    
-    // Fix the bullet/number mixing - convert ALL to bullets
-    .replace(/^\s*\d+\.\s*/gm, '• ')     // "1. " → "• "
-    .replace(/^\s*-\s*/gm, '• ')         // "- " → "• "
-    .replace(/^\s*\*\s*/gm, '• ')        // "* " → "• "
-    
-    // Clean up multiple line breaks
-    .replace(/\n\n\n+/g, '\n\n')
-    
-    // Clean up spacing
-    .replace(/\s+/g, ' ')
-    .replace(/\n\s+/g, '\n')
-    
-    .trim();
-};
 
 
 export function ChatInterface({ displayMode = 'page', onClose, messages, setMessages }: ChatInterfaceProps) {
@@ -142,9 +122,6 @@ export function ChatInterface({ displayMode = 'page', onClose, messages, setMess
 
   const handleSendMessage = async (text: string) => {
     if (text.trim() === 'Start hair loss assessment') {
-        // Special handling for this action card to navigate
-        // In a real app, this would use Next.js router or Link component
-        // For now, we'll just log it. Ideally, this action card would be a Link.
         window.location.href = '/assessment/step1';
         return;
     }
@@ -160,9 +137,6 @@ export function ChatInterface({ displayMode = 'page', onClose, messages, setMess
 
     try {
       const context = prepareAgentContext([...messages, userMessage]);
-
-      console.log('Context being sent to AWS:', context);
-
       const response = await fetch('/api/bedrock-chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -180,7 +154,7 @@ export function ChatInterface({ displayMode = 'page', onClose, messages, setMess
     } catch (error) {
       console.error('Chat error:', error);
       const fallbackResponse = getPlaceholderResponse(text);
-      const cleanFallbackResponse = formatAIResponse(fallbackResponse); // Also format fallback
+      const cleanFallbackResponse = formatAIResponse(fallbackResponse);
       const aiMessage: Message = { id: `${Date.now()}-fallback`, text: cleanFallbackResponse, sender: 'ai', timestamp: new Date() };
       setMessages((prevMessages) => [...prevMessages, aiMessage]);
     } finally {
@@ -209,7 +183,6 @@ export function ChatInterface({ displayMode = 'page', onClose, messages, setMess
               key={card.title}
               onClick={() => {
                  if (card.action === 'Start hair loss assessment') {
-                  // Direct navigation for this specific card
                   window.location.href = '/assessment/step1';
                 } else {
                   handleSendMessage(card.action);
@@ -231,7 +204,6 @@ export function ChatInterface({ displayMode = 'page', onClose, messages, setMess
     );
   }
 
-  // Default chat interface for when messages exist or in modal mode
   return (
     <div className={cn(
         "flex flex-col h-full w-full",
@@ -278,5 +250,3 @@ export function ChatInterface({ displayMode = 'page', onClose, messages, setMess
     </div>
   );
 }
-
-    

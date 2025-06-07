@@ -19,6 +19,7 @@ import type {
   SummaryByCategory
 } from '@/types';
 import { ArrowLeft, SendHorizontal, MessageSquare, Info, Lightbulb, CheckCircle2 } from 'lucide-react';
+import { formatAIResponse } from '@/utils/responseFormatter';
 
 const recommendationMap: Record<string, Omit<RecommendationDetail, 'tag' | 'category'>> = {
   'High stress': {
@@ -92,27 +93,6 @@ const summarizeSelections = (selections: (HairLossImage[] | SelectedTag[]), type
     }
   });
   return summary;
-};
-
-const formatAIResponse = (text: string) => {
-  return text
-    // Remove asterisks
-    .replace(/\*\*/g, '')
-    .replace(/\*/g, '')
-    
-    // Fix the bullet/number mixing - convert ALL to bullets
-    .replace(/^\s*\d+\.\s*/gm, '• ')     // "1. " → "• "
-    .replace(/^\s*-\s*/gm, '• ')         // "- " → "• "
-    .replace(/^\s*\*\s*/gm, '• ')        // "* " → "• "
-    
-    // Clean up multiple line breaks
-    .replace(/\n\n\n+/g, '\n\n')
-    
-    // Clean up spacing
-    .replace(/\s+/g, ' ')
-    .replace(/\n\s+/g, '\n')
-    
-    .trim();
 };
 
 
@@ -488,6 +468,4 @@ export default function AssessmentStep3Page() {
     </>
   );
 }
-    
-
     

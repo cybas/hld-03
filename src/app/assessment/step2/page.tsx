@@ -22,6 +22,7 @@ import {
   Microscope
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatAIResponse } from '@/utils/responseFormatter';
 
 const dietNutritionTags = [
   'Zero red meat diet', 'Pescatarian diet', 'Vegetarian diet', 'Vegan diet', 
@@ -95,26 +96,6 @@ const tagCategories = [
   { title: 'SCALP CONDITIONS', tags: scalpConditionTags, icon: Microscope, id: 'scalp' },
 ];
 
-const formatAIResponse = (text: string) => {
-  return text
-    // Remove asterisks
-    .replace(/\*\*/g, '')
-    .replace(/\*/g, '')
-    
-    // Fix the bullet/number mixing - convert ALL to bullets
-    .replace(/^\s*\d+\.\s*/gm, '• ')     // "1. " → "• "
-    .replace(/^\s*-\s*/gm, '• ')         // "- " → "• "
-    .replace(/^\s*\*\s*/gm, '• ')        // "* " → "• "
-    
-    // Clean up multiple line breaks
-    .replace(/\n\n\n+/g, '\n\n')
-    
-    // Clean up spacing
-    .replace(/\s+/g, ' ')
-    .replace(/\n\s+/g, '\n')
-    
-    .trim();
-};
 
 export default function AssessmentStep2Page() {
   const [selectedTags, setSelectedTags] = useState<SelectedTag[]>([]);
@@ -164,7 +145,7 @@ export default function AssessmentStep2Page() {
         selectedImages: currentAssessmentData.selectedImages || [],
         selectedTags: newSelection,
         currentStep: 2,
-        assessmentResults: currentAssessmentData.assessmentResults // Preserve results if they exist
+        assessmentResults: currentAssessmentData.assessmentResults 
       };
       sessionStorage.setItem('assessmentData', JSON.stringify(assessmentUpdate));
       
@@ -383,6 +364,4 @@ export default function AssessmentStep2Page() {
     </>
   );
 }
-    
-
     
