@@ -95,29 +95,12 @@ const tagCategories = [
   { title: 'SCALP CONDITIONS', tags: scalpConditionTags, icon: Microscope, id: 'scalp' },
 ];
 
-const formatAIResponse = (text: string): string => {
-  // If already properly formatted, return as-is
-  if (text.includes('**Based on Your Assessment**') && text.includes('•')) {
-    return text;
-  }
-  
-  // Force format wall-of-text responses
-  const sections = text.split(/[.!?]\s+/);
-  
-  if (sections.length > 3) {
-    // Create structured format
-    const intro = sections[0] + '.';
-    const points = sections.slice(1, Math.min(6, sections.length)).map(s => `• ${s.trim()}.`);
-    
-    return `**Based on Your Assessment**: ${intro}
-
-**Key Points**:
-${points.join('\n')}
-
-**Next Steps**: Consider discussing specific treatments that interest you most.`;
-  }
-  
-  return text;
+const formatAIResponse = (text: string) => {
+  return text
+    .replace(/\*\*/g, '')
+    .replace(/\s+/g, ' ')
+    .replace(/\n\n+/g, '\n\n')
+    .trim();
 };
 
 export default function AssessmentStep2Page() {
@@ -327,9 +310,9 @@ export default function AssessmentStep2Page() {
                   <p className="font-semibold mb-0.5">{msg.sender === 'user' ? 'You' : 'AI Assistant'}</p>
                   {msg.sender === 'user' 
                     ? <p className="whitespace-pre-wrap">{msg.text}</p>
-                    : <p className="whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: msg.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }}></p>
+                    : <p className="whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: msg.text }}></p>
                   }
-                  <span className="text-xs text-muted-foreground/70 mt-1 block text-right">
+                  <span className="text-xs text-primary-foreground mt-1 block text-right">
                     {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
@@ -387,6 +370,4 @@ export default function AssessmentStep2Page() {
     </>
   );
 }
-    
-
     
