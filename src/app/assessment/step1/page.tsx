@@ -351,6 +351,7 @@ export default function AssessmentStep1Page() {
 
       if (response.ok) {
         const data = await response.json();
+        console.log('Raw AWS response:', data.response);
         const cleanResponse = formatAIResponse(data.response);
         const aiMessage: Message = {
           id: `${Date.now()}-ai`,

@@ -78,11 +78,15 @@ interface ChatInterfaceProps {
 }
 
 const formatAIResponse = (text: string): string => {
+  console.log('Original AWS response:', text);
+
   let formatted = text
     .replace(/\*+/g, '') 
     .replace(/\s+/g, ' ') 
     .trim();
   
+  console.log('After basic cleanup:', formatted);
+
   if (formatted.includes('based on') || formatted.includes('selected')) {
     const sentences = formatted.split(/[.!?]+/).filter(s => s.trim());
     
@@ -96,10 +100,12 @@ const formatAIResponse = (text: string): string => {
         }
       }
       
+      console.log('Formatted result:', result);
       return result;
     }
   }
   
+  console.log('No formatting applied, returning:', formatted);
   return formatted;
 };
 
@@ -164,6 +170,8 @@ export function ChatInterface({ displayMode = 'page', onClose, messages, setMess
 
     try {
       const context = prepareAgentContext([...messages, userMessage]);
+
+      console.log('Context being sent to AWS:', context);
 
       const response = await fetch('/api/bedrock-chat', {
         method: 'POST',

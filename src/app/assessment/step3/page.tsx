@@ -95,6 +95,7 @@ const summarizeSelections = (selections: (HairLossImage[] | SelectedTag[]), type
 };
 
 const formatAIResponse = (text: string): string => {
+  console.log('Original AWS response:', text);
   let formatted = text
     .replace(/\*+/g, '') 
     .replace(/\s+/g, ' ') 
@@ -102,6 +103,7 @@ const formatAIResponse = (text: string): string => {
   
   if (formatted.includes('based on') || formatted.includes('selected')) {
     const sentences = formatted.split(/[.!?]+/).filter(s => s.trim());
+    console.log('After basic cleanup:', formatted);
     
     if (sentences.length >= 2) {
       let result = `**Based on Your Assessment**: ${sentences[0].trim()}\n\n`;
@@ -269,6 +271,7 @@ export default function AssessmentStep3Page() {
     setIsChatLoading(true);
 
     const context = getChatContext();
+    console.log('Context being sent to AWS:', context);
 
     try {
       const response = await fetch('/api/bedrock-chat', {
@@ -279,6 +282,7 @@ export default function AssessmentStep3Page() {
 
       if (response.ok) {
         const data = await response.json();
+        console.log('Raw AWS response:', data.response);
         const cleanResponse = formatAIResponse(data.response);
         const aiMessage: Message = {
           id: `${Date.now()}-ai`,
