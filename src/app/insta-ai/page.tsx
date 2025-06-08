@@ -3,7 +3,8 @@
 
 import { useState, useEffect, useRef, type FormEvent } from 'react';
 import Link from 'next/link';
-import Image from 'next/image'; // For potential future use, not strictly needed for the icon SVG
+// Image import is not used, so it can be removed or kept for future.
+// import Image from 'next/image'; 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -23,13 +24,13 @@ import {
   History,
   HelpCircle,
   FileUp,
-  MessageSquare
+  // MessageSquare // Not used in this file directly for initial view
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import useChatScroll from '@/hooks/use-chat-scroll';
 import { MessageBubble } from '@/components/chat/message-bubble';
 import { TypingIndicator } from '@/components/chat/typing-indicator';
-import { formatAIResponse } from '@/utils/responseFormatter'; // Assuming this is the consolidated one
+import { formatAIResponse } from '@/utils/responseFormatter';
 
 // Custom SVG Icon for the header
 const AiTrichologistIcon = () => (
@@ -61,10 +62,18 @@ const featureChipsData: FeatureChip[] = [
   { id: 'progress', icon: LineChart, text: 'Track Progress', color: '#4BCB6A', actionType: 'chat', actionValue: 'How can I track my hair growth progress?' },
   { id: 'ingredient', icon: FlaskConical, text: 'Ingredient Checker', color: '#F64BC1', actionType: 'chat', actionValue: 'Can you help me check some hair product ingredients?' },
   { id: 'tips', icon: Lightbulb, text: 'Hair-Care Tips', color: '#4BB7F6', actionType: 'chat', actionValue: 'Give me some general hair care tips.' },
-  { id: 'history', icon: History, text: 'Diagnosis History', color: '#9A6AF6', actionType: 'chat', actionValue: 'Where can I find my diagnosis history?' }, // Placeholder action
+  { id: 'history', icon: History, text: 'Diagnosis History', color: '#9A6AF6', actionType: 'chat', actionValue: 'Where can I find my diagnosis history?' },
   { id: 'faq', icon: HelpCircle, text: 'FAQs', color: '#F6B94B', actionType: 'chat', actionValue: 'What are some frequently asked questions about hair loss?' },
-  { id: 'upload', icon: FileUp, text: 'Document Upload', color: '#4B6AF6', actionType: 'chat', actionValue: 'How can I upload documents?' }, // Placeholder action
+  { id: 'upload', icon: FileUp, text: 'Document Upload', color: '#4B6AF6', actionType: 'chat', actionValue: 'How can I upload documents?' },
 ];
+
+// Helper function to convert hex to rgba
+const hexToRgba = (hex: string, alpha: number): string => {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
 
 export default function InstaAIPage() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -138,7 +147,7 @@ export default function InstaAIPage() {
   };
 
   const handleQuickActionClick = (message: string) => {
-    setChatInputValue(message); // Pre-fill input for user to see
+    setChatInputValue(message); 
     handleSendMessage(message, true);
   };
   
@@ -146,14 +155,12 @@ export default function InstaAIPage() {
     if (chip.actionType === 'chat') {
       handleSendMessage(chip.actionValue, true);
     }
-    // Link action is handled by Next.js Link component
   };
 
   return (
     <div className="flex flex-col items-center justify-start min-h-screen bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white to-[#FAFAFF] p-4 sm:p-6 font-body">
       <div className={cn("flex flex-col w-full transition-all duration-300 ease-out", isChatActive ? "max-w-screen-md" : "max-w-screen-md items-center text-center space-y-10 sm:space-y-12 pt-8 sm:pt-12")}>
         
-        {/* Brand Header - Always Visible or adapted */}
         <header className={cn("flex flex-col items-center gap-3", isChatActive ? "py-4 border-b w-full mb-4" : "")}>
           <AiTrichologistIcon />
           <h1 className={cn("font-bold text-gray-900", isChatActive ? "text-2xl" : "text-3xl")}>
@@ -167,7 +174,6 @@ export default function InstaAIPage() {
         </header>
 
         {isChatActive ? (
-          // CHAT ACTIVE VIEW
           <div className="flex flex-col w-full h-[calc(100vh-180px)] sm:h-[calc(100vh-200px)] bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
             <ScrollArea viewportRef={chatViewportRef} className="flex-grow p-4 md:p-6 space-y-3 md:space-y-4 chat-scroll-area">
               {messages.map((msg) => <MessageBubble key={msg.id} message={msg} />)}
@@ -179,7 +185,6 @@ export default function InstaAIPage() {
               {isLoading && <div className="pl-12 -mt-8"><TypingIndicator /></div>}
             </ScrollArea>
             <div className="p-2 md:p-3 border-t bg-gray-50">
-              {/* Re-using input structure from initial view, adapted */}
                <form onSubmit={handleFormSubmit} className="w-full bg-white rounded-xl border border-gray-300 shadow-sm p-1.5">
                 <div className="flex items-center gap-2">
                   <Input
@@ -187,7 +192,7 @@ export default function InstaAIPage() {
                     type="text"
                     value={chatInputValue}
                     onChange={(e) => setChatInputValue(e.target.value)}
-                    placeholder="Ask anything, or type '/quit' to restart..."
+                    placeholder="Ask anything..."
                     className="flex-1 border-none focus:ring-0 focus-visible:ring-offset-0 focus-visible:ring-0 bg-transparent h-10 placeholder-gray-500"
                     disabled={isLoading}
                   />
@@ -207,9 +212,7 @@ export default function InstaAIPage() {
             </div>
           </div>
         ) : (
-          // INITIAL VIEW (NOT CHAT ACTIVE)
           <>
-            {/* Chat Input Card - Initial */}
             <div className="w-full max-w-2xl rounded-[14px] border border-[#E5E7EB] bg-white/90 backdrop-blur-sm shadow-sm p-3 sm:p-4">
               <form onSubmit={handleFormSubmit} className="w-full">
                 <div className="flex items-center gap-2">
@@ -254,38 +257,30 @@ export default function InstaAIPage() {
               </div>
             </div>
 
-            {/* Feature Chips Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 w-full max-w-3xl">
               {featureChipsData.map((chip) => {
                 const chipContent = (
                   <>
-                    <chip.icon className="h-4 w-4" style={{ color: chip.color }} />
+                    <chip.icon className="h-4 w-4" /> {/* Icon color will be inherited from parent's text color */}
                     <span>{chip.text}</span>
                   </>
                 );
                 
                 const chipClasses = cn(
-                  "h-11 w-full rounded-full text-sm font-medium flex items-center justify-center gap-2 px-3 transition-all duration-150 ease-out active:scale-95 hover:scale-105 focus-visible:ring-2 focus-visible:ring-offset-2",
+                  "h-11 w-full rounded-full text-sm font-medium flex items-center justify-center gap-2 px-3 border transition-all duration-150 ease-out active:scale-95 hover:scale-105 focus-visible:ring-2 focus-visible:ring-offset-2",
                   isLoading && "opacity-70 cursor-not-allowed"
                 );
 
                 const chipStyle: React.CSSProperties = {
                   borderColor: chip.color,
                   color: chip.color,
-                  // Tailwind doesn't support dynamic rgba with opacity shorthand like /[0.04] directly in style prop.
-                  // We'll use a workaround for background or rely on Tailwind classes if possible.
-                  // For hover, we'll use Tailwind's hover:bg-opacity utility
+                  backgroundColor: hexToRgba(chip.color, 0.04), // 4% transparent fill
                 };
                 
-                // Constructing background color with opacity
-                const bgColor = chip.color + '0A'; // approx 4% opacity (0A in hex for alpha)
-                const hoverBgColor = chip.color + '14'; // approx 8% opacity (14 in hex for alpha)
-
-
                 return chip.actionType === 'link' ? (
                   <Link key={chip.id} href={chip.actionValue} passHref legacyBehavior>
                     <a 
-                      className={cn(chipClasses, `bg-[${bgColor}] hover:bg-[${hoverBgColor}]`)}
+                      className={chipClasses}
                       style={chipStyle}
                       onClick={(e) => { if (isLoading) e.preventDefault(); }}
                       aria-disabled={isLoading}
@@ -296,8 +291,8 @@ export default function InstaAIPage() {
                 ) : (
                   <Button
                     key={chip.id}
-                    variant="outline"
-                    className={cn(chipClasses, `bg-[${bgColor}] hover:bg-[${hoverBgColor}]`)}
+                    variant="outline" // Keep variant="outline" to remove default button background before applying ours
+                    className={chipClasses}
                     style={chipStyle}
                     onClick={() => handleChipClick(chip)}
                     disabled={isLoading}
@@ -313,4 +308,3 @@ export default function InstaAIPage() {
     </div>
   );
 }
-
