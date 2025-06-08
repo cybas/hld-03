@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -43,7 +42,6 @@ const ClipboardIcon = () => (
   </svg>
 );
 
-
 const actionCards = [
   {
     icon: <MicroscopeIcon />,
@@ -78,7 +76,6 @@ interface ChatInterfaceProps {
   setMessages: (value: Message[] | ((val: Message[]) => Message[])) => void;
 }
 
-
 export function ChatInterface({ displayMode = 'page', onClose, messages, setMessages }: ChatInterfaceProps) {
   const [isLoading, setIsLoading] = useState(false);
   const chatViewportRef = useChatScroll(messages);
@@ -91,7 +88,6 @@ export function ChatInterface({ displayMode = 'page', onClose, messages, setMess
       }, 100);
     }
   }, [displayMode, messages.length]);
-
 
   const getPlaceholderResponse = (userText: string): string => {
     const lowerUserText = userText.toLowerCase();
@@ -110,14 +106,26 @@ export function ChatInterface({ displayMode = 'page', onClose, messages, setMess
     if (lowerUserText.includes("hormones")) {
       return "Hormonal imbalances are a common factor. For men, DHT is often involved, while for women, thyroid issues or PCOS can play a role. Please remember, this information is for educational purposes. Consider discussing with your healthcare provider or a dermatologist for personalized medical advice and diagnosis.";
     }
-     if (lowerUserText.includes("blood test")) {
+    if (lowerUserText.includes("blood test")) {
       return "Comprehensive blood tests can help identify underlying issues contributing to hair loss. These might include tests for nutrient deficiencies, hormone levels, and thyroid function. Please remember, this information is for educational purposes. Consider discussing with your healthcare provider or a dermatologist for personalized medical advice and diagnosis.";
     }
     return "I'm here to help with hair loss questions. Could you tell me more about what you'd like to know? Please remember, this information is for educational purposes. Consider discussing with your healthcare provider or a dermatologist for personalized medical advice and diagnosis.";
   };
 
-  const prepareAgentContext = (messages: Message[]) => {
-    return messages[messages.length - 1]?.text || '';
+  const prepareAgentContext = () => {
+    // Try to get assessment data from session storage
+    const assessmentData = typeof window !== 'undefined' 
+      ? JSON.parse(sessionStorage.getItem('hairLossAssessment') || '{}')
+      : {};
+      
+    return {
+      currentStep: assessmentData.currentStep || 'chat',
+      selectedImages: assessmentData.selectedImages || [],
+      selectedTags: assessmentData.selectedTags || [],
+      assessmentResults: assessmentData.results || {},
+      preferences: assessmentData.preferences || {},
+      chatHistory: assessmentData.chatHistory || []
+    };
   };
 
   const handleSendMessage = async (text: string) => {
@@ -136,17 +144,29 @@ export function ChatInterface({ displayMode = 'page', onClose, messages, setMess
     setIsLoading(true);
 
     try {
-      const context = prepareAgentContext([...messages, userMessage]);
+      const context = prepareAgentContext();
+      console.log('📤 Sending to API:', { message: text, context });
+      
       const response = await fetch('/api/bedrock-chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: context }), 
+        body: JSON.stringify({ 
+          message: text,  // Send the actual message text
+          context: context  // Send the full context object
+        }), 
       });
 
       if (response.ok) {
         const data = await response.json();
+        console.log('📥 Received from API:', data);
+        
         const cleanResponse = formatAIResponse(data.response);
-        const aiMessage: Message = { id: `${Date.now()}-ai`, text: cleanResponse, sender: 'ai', timestamp: new Date() };
+        const aiMessage: Message = { 
+          id: `${Date.now()}-ai`, 
+          text: cleanResponse, 
+          sender: 'ai', 
+          timestamp: new Date() 
+        };
         setMessages((prevMessages) => [...prevMessages, aiMessage]);
       } else {
         throw new Error(`API call failed with status: ${response.status}`);
@@ -155,7 +175,12 @@ export function ChatInterface({ displayMode = 'page', onClose, messages, setMess
       console.error('Chat error:', error);
       const fallbackResponse = getPlaceholderResponse(text);
       const cleanFallbackResponse = formatAIResponse(fallbackResponse);
-      const aiMessage: Message = { id: `${Date.now()}-fallback`, text: cleanFallbackResponse, sender: 'ai', timestamp: new Date() };
+      const aiMessage: Message = { 
+        id: `${Date.now()}-fallback`, 
+        text: cleanFallbackResponse, 
+        sender: 'ai', 
+        timestamp: new Date() 
+      };
       setMessages((prevMessages) => [...prevMessages, aiMessage]);
     } finally {
       setIsLoading(false);

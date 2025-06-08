@@ -5,6 +5,7 @@ export async function POST(request: NextRequest) {
   try {
     const { message, context } = await request.json();
 
+    console.log('🔍 Received message:', message);
     console.log('🔍 Received context:', JSON.stringify(context, null, 2));
 
     // Initialize Bedrock Agent client
@@ -19,10 +20,11 @@ export async function POST(request: NextRequest) {
     // Enhanced prompt with full context
     const enhancedPrompt = `
 USER CONTEXT:
-- Current Step: ${context?.currentStep || 'Unknown'}
+- Current Step: ${context?.currentStep || 'General Chat'}
 - Selected Images: ${JSON.stringify(context?.selectedImages || [])}
 - Selected Tags: ${JSON.stringify(context?.selectedTags || [])}
 - Assessment Results: ${JSON.stringify(context?.assessmentResults || {})}
+- User Preferences: ${JSON.stringify(context?.preferences || {})}
 
 USER MESSAGE: ${message}
 
@@ -52,7 +54,7 @@ Please provide a helpful, professional response based on the user's hair loss as
       }
     }
 
-    console.log('🔍 AWS response:', fullResponse);
+    console.log('🔍 Raw AWS response:', fullResponse);
 
     return NextResponse.json({ response: fullResponse });
 

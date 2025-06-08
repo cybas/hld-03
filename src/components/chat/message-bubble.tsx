@@ -8,8 +8,30 @@ interface MessageBubbleProps {
   message: Message;
 }
 
+function convertToHtml(markdownText: string): string {
+  let html = markdownText;
+  // **bold** to <strong>
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  // Markdown list items (- item or * item) to • item (visual cue)
+  html = html.replace(/^- /gm, '• ');
+  html = html.replace(/^\* /gm, '• ');
+  // Newlines to <br>
+  html = html.replace(/\n/g, '<br>');
+  return html;
+}
+
 export function MessageBubble({ message }: MessageBubbleProps) {
   const isUser = message.sender === 'user';
+
+  let displayText = '';
+  if (message.id !== 'typing') {
+    if (isUser) {
+      displayText = message.text;
+    } else {
+      // AI messages are processed for basic markdown
+      displayText = convertToHtml(message.text);
+    }
+  }
 
   return (
     <div className={cn('flex items-end space-x-2 group', isUser ? 'justify-end' : 'justify-start')}>
@@ -32,14 +54,14 @@ export function MessageBubble({ message }: MessageBubbleProps) {
           null 
         ) : (
           isUser 
-            ? <p className="whitespace-pre-wrap">{message.text}</p>
-            // For AI messages, directly render message.text which might contain HTML from Bedrock (after formatAIResponse cleanup)
-            : <p className="whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: message.text }}></p>
+            ? <p className="whitespace-pre-wrap">{displayText}</p>
+            // For AI messages, use dangerouslySetInnerHTML after converting markdown to basic HTML
+            : <p className="whitespace-normal text-card-foreground leading-relaxed" dangerouslySetInnerHTML={{ __html: displayText }}></p>
         )}
         {message.id !== 'typing' && (
             <p className={cn(
                 "text-xs mt-1.5 text-right",
-                isUser ? "text-primary-foreground" : "text-muted-foreground" // User timestamp explicitly primary-foreground
+                isUser ? "text-primary-foreground" : "text-muted-foreground"
               )}>
               {format(new Date(message.timestamp), 'p')}
             </p>
