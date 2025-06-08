@@ -3,8 +3,6 @@
 
 import { useState, useEffect, useRef, type FormEvent } from 'react';
 import Link from 'next/link';
-// Image import is not used, so it can be removed or kept for future.
-// import Image from 'next/image'; 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -15,21 +13,15 @@ import {
   SendHorizontal, 
   Search, 
   Lightbulb,
-  UserCheck,
-  ListChecks,
-  ShoppingBag,
+  BriefcaseMedical, 
+  ListOrdered,    
+  Archive,       
   CalendarDays,
   LineChart,
-  FlaskConical,
-  History,
-  HelpCircle,
-  FileUp,
-  BriefcaseMedical, // Changed from UserCheck for better visual
-  ListOrdered,    // Changed from ListChecks
-  Archive,       // Changed from ShoppingBag
-  NotebookText,   // Changed for Ingredient Checker
-  MessageCircleQuestion, // Changed for FAQs
-  UploadCloud     // Changed for Document Upload
+  NotebookText,  
+  MessageCircleQuestion, 
+  UploadCloud,
+  History
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import useChatScroll from '@/hooks/use-chat-scroll';
@@ -37,7 +29,7 @@ import { MessageBubble } from '@/components/chat/message-bubble';
 import { TypingIndicator } from '@/components/chat/typing-indicator';
 import { formatAIResponse } from '@/utils/responseFormatter';
 
-// Custom SVG Icon for the header
+// Custom SVG Icon for the header (re-used from original)
 const AiTrichologistIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#6A4BF6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
     <path d="M12 8V4H8"/>
@@ -50,13 +42,22 @@ const AiTrichologistIcon = () => (
   </svg>
 );
 
+const HairFollicleBgIcon = () => (
+  <svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-60 w-60 text-gray-500 opacity-[0.03] -z-10 pointer-events-none">
+    <path d="M12 2C9.23858 2 7 4.23858 7 7V13C7 14.1046 7.89543 15 9 15H15C16.1046 15 17 14.1046 17 13V7C17 4.23858 14.7614 2 12 2Z" stroke="currentColor" strokeWidth="0.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M10 15V20C10 21.1046 10.8954 22 12 22C13.1046 22 14 21.1046 14 20V15" stroke="currentColor" strokeWidth="0.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <circle cx="12" cy="9" r="2" stroke="currentColor" strokeWidth="0.5"/>
+  </svg>
+);
+
+
 interface FeatureChip {
   id: string;
   icon: React.ElementType;
   text: string;
-  color: string; // Hex color e.g., #6A4BF6
+  color: string; 
   actionType: 'link' | 'chat';
-  actionValue: string; // URL for link, chat message for chat
+  actionValue: string; 
 }
 
 const featureChipsData: FeatureChip[] = [
@@ -72,17 +73,15 @@ const featureChipsData: FeatureChip[] = [
   { id: 'upload', icon: UploadCloud, text: 'Document Upload', color: '#4B6AF6', actionType: 'chat', actionValue: 'How can I upload documents?' },
 ];
 
-// Helper function to convert hex to rgba
 const hexToRgba = (hex: string, alpha: number): string => {
   if (!hex || typeof hex !== 'string' || !hex.startsWith('#')) {
-    // Return a default or transparent color if hex is invalid to prevent errors
-    return `rgba(0, 0, 0, ${alpha})`; 
+    return `rgba(0,0,0,${alpha})`; 
   }
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
   if (isNaN(r) || isNaN(g) || isNaN(b)) {
-    return `rgba(0, 0, 0, ${alpha})`; // Fallback for parsing errors
+    return `rgba(0,0,0,${alpha})`;
   }
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
@@ -106,7 +105,7 @@ export default function InstaAIPage() {
     document.title = 'Chat with HairLossDoctor.AI';
   }, []);
 
-  const handleSendMessage = async (text: string, fromQuickAction = false) => {
+  const handleSendMessage = async (text: string, fromQuickActionOrChip = false) => {
     if (!text.trim()) return;
 
     const userMessage: Message = {
@@ -116,7 +115,7 @@ export default function InstaAIPage() {
       timestamp: new Date(),
     };
     setMessages((prev) => [...prev, userMessage]);
-    if (!fromQuickAction) {
+    if (!fromQuickActionOrChip) {
       setChatInputValue('');
     }
     setIsLoading(true);
@@ -157,28 +156,22 @@ export default function InstaAIPage() {
     e.preventDefault();
     handleSendMessage(chatInputValue);
   };
-
-  const handleQuickActionClick = (message: string) => {
-    setChatInputValue(message); 
-    handleSendMessage(message, true);
-  };
   
   const handleChipClick = (chip: FeatureChip) => {
     if (chip.actionType === 'chat') {
       handleSendMessage(chip.actionValue, true);
     }
-    // Link actions are handled by the Link component itself
   };
 
   const chipBaseClasses = "h-11 w-full rounded-full text-sm font-medium flex items-center justify-center gap-2 px-3 border transition-all duration-150 ease-out active:scale-95 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-ring";
   const chipDisabledClasses = "opacity-70 cursor-not-allowed pointer-events-none";
 
-
   return (
-    <div className="flex flex-col items-center justify-start min-h-screen bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white to-[#FAFAFF] p-4 sm:p-6 font-body">
-      <div className={cn("flex flex-col w-full transition-all duration-300 ease-out", isChatActive ? "max-w-screen-md" : "max-w-screen-md items-center text-center space-y-10 sm:space-y-12 pt-8 sm:pt-12")}>
+    <div className="flex flex-col items-center justify-start min-h-screen bg-[radial-gradient(ellipse_120%_90%_at_50%_0%,_white_0%,_rgba(250,250,255,0.7)_100%)] p-4 sm:p-6 font-body">
+      <div className={cn("flex flex-col w-full transition-all duration-300 ease-out", isChatActive ? "max-w-screen-md" : "max-w-screen-md items-center text-center sm:space-y-10 space-y-8 pt-8 sm:pt-12")}>
         
-        <header className={cn("flex flex-col items-center gap-3", isChatActive ? "py-4 border-b w-full mb-4" : "")}>
+        <header className={cn("relative flex flex-col items-center gap-3", isChatActive ? "py-4 border-b w-full mb-4" : "")}>
+          {!isChatActive && <HairFollicleBgIcon />}
           <AiTrichologistIcon />
           <h1 className={cn("font-bold text-gray-900", isChatActive ? "text-2xl" : "text-3xl")}>
             Hello, I&apos;m HairlossDoctor.AI
@@ -230,7 +223,7 @@ export default function InstaAIPage() {
           </div>
         ) : (
           <>
-            <div className="w-full max-w-2xl rounded-[14px] border border-[#E5E7EB] bg-white/90 backdrop-blur-sm shadow-sm p-3 sm:p-4">
+            <div className="w-full max-w-lg rounded-[14px] border border-[#E5E7EB] bg-white/90 backdrop-blur-sm shadow-md p-3 sm:p-4">
               <form onSubmit={handleFormSubmit} className="w-full">
                 <div className="flex items-center gap-2">
                   <Input
@@ -255,7 +248,7 @@ export default function InstaAIPage() {
                   </div>
                 </div>
               </form>
-              <div className="flex items-center gap-2 sm:gap-3 mt-3 sm:mt-4 pl-1">
+              <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 mt-3 sm:mt-4 pl-1">
                 {[
                   { text: "Hair Scan", icon: Search, action: "Tell me about hair scanning" },
                   { text: "Routine Ideas", icon: Lightbulb, action: "Suggest some hair care routine ideas" }
@@ -263,8 +256,8 @@ export default function InstaAIPage() {
                   <Button
                     key={pill.text}
                     variant="outline"
-                    onClick={() => handleQuickActionClick(pill.action)}
-                    className="h-7 text-sm rounded-full border-[#D9D9FF] px-3 py-1 text-gray-700 hover:bg-[#6A4BF6]/[0.06] hover:border-[#6A4BF6]/50 hover:text-[#6A4BF6] transition-all duration-150 ease-out active:scale-95 hover:scale-105 flex items-center gap-1.5"
+                    onClick={() => !isLoading && handleSendMessage(pill.action, true)}
+                    className="h-7 text-sm rounded-full border-[rgba(106,75,246,0.4)] px-3 py-1 text-gray-700 hover:bg-[rgba(106,75,246,0.04)] hover:border-[#6A4BF6]/80 hover:text-[#6A4BF6] transition-all duration-150 ease-out active:scale-95 hover:scale-105 flex items-center gap-1.5 w-full sm:w-auto"
                     disabled={isLoading}
                   >
                     <pill.icon className="h-3.5 w-3.5" />
@@ -274,61 +267,128 @@ export default function InstaAIPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 w-full max-w-3xl">
-              {featureChipsData.map((chip) => {
-                const chipContent = (
-                  <>
-                    <chip.icon className="h-4 w-4" />
-                    <span>{chip.text}</span>
-                  </>
-                );
-                
-                const chipStyle: React.CSSProperties = {
-                  borderColor: chip.color,
-                  color: chip.color,
-                  backgroundColor: hexToRgba(chip.color, 0.04),
-                };
-                
-                if (chip.actionType === 'link') {
+            <Button asChild size="lg" className="w-full sm:w-auto max-w-xs bg-[#6A4BF6] text-white hover:bg-[#583DE0] active:scale-95 transition-all">
+              <Link href="/assessment/step1">Start Hair-Loss Assessment</Link>
+            </Button>
+            
+            <div className="w-full max-w-3xl">
+              <div className="sm:grid sm:grid-cols-[repeat(auto-fit,minmax(160px,1fr))] sm:gap-4 hidden"> {/* Hidden on small, grid on sm+ */}
+                {featureChipsData.map((chip) => {
+                  const chipContent = (
+                    <>
+                      <chip.icon className="h-4 w-4" style={{ color: chip.color }} />
+                      <span className="text-slate-700 opacity-70">{chip.text}</span>
+                    </>
+                  );
+                  
+                  const chipStyle: React.CSSProperties = {
+                    borderColor: chip.color,
+                    backgroundColor: hexToRgba(chip.color, 0.04),
+                  };
+                  
+                  if (chip.actionType === 'link') {
+                    return (
+                      <Link key={chip.id} href={chip.actionValue} passHref legacyBehavior>
+                        <a 
+                          className={cn(chipBaseClasses, isLoading && chipDisabledClasses, "hover:scale-105")}
+                          style={chipStyle}
+                          onClick={(e) => { if (isLoading) e.preventDefault(); }}
+                          aria-disabled={isLoading}
+                        >
+                          {chipContent}
+                        </a>
+                      </Link>
+                    );
+                  }
+                  
                   return (
-                    <Link key={chip.id} href={chip.actionValue} passHref legacyBehavior>
-                      <a 
-                        className={cn(chipBaseClasses, isLoading && chipDisabledClasses)}
+                    <div
+                      key={chip.id}
+                      role="button"
+                      tabIndex={isLoading ? -1 : 0}
+                      className={cn(chipBaseClasses, isLoading && chipDisabledClasses, "cursor-pointer hover:scale-105")}
+                      style={chipStyle}
+                      onClick={() => !isLoading && handleChipClick(chip)}
+                      onKeyDown={(e) => {
+                        if (!isLoading && (e.key === 'Enter' || e.key === ' ')) {
+                          e.preventDefault(); 
+                          handleChipClick(chip);
+                        }
+                      }}
+                      aria-disabled={isLoading}
+                    >
+                      {chipContent}
+                    </div>
+                  );
+                })}
+              </div>
+              {/* Horizontally scrollable container for small screens */}
+              <div className="sm:hidden w-full overflow-hidden">
+                <div className="grid grid-rows-2 grid-flow-col gap-3 auto-cols-[160px] overflow-x-auto py-1 snap-x snap-mandatory no-scrollbar pr-4">
+                   {featureChipsData.map((chip) => {
+                    const chipContent = (
+                      <>
+                        <chip.icon className="h-4 w-4" style={{ color: chip.color }} />
+                        <span className="text-slate-700 opacity-70">{chip.text}</span>
+                      </>
+                    );
+                    
+                    const chipStyle: React.CSSProperties = {
+                      borderColor: chip.color,
+                      backgroundColor: hexToRgba(chip.color, 0.04),
+                      width: '160px', // ensure fixed width for scrollable items
+                    };
+                    
+                    if (chip.actionType === 'link') {
+                      return (
+                        <Link key={chip.id} href={chip.actionValue} passHref legacyBehavior>
+                          <a 
+                            className={cn(chipBaseClasses, isLoading && chipDisabledClasses, "hover:scale-105 snap-start")}
+                            style={chipStyle}
+                            onClick={(e) => { if (isLoading) e.preventDefault(); }}
+                            aria-disabled={isLoading}
+                          >
+                            {chipContent}
+                          </a>
+                        </Link>
+                      );
+                    }
+                    
+                    return (
+                      <div
+                        key={chip.id}
+                        role="button"
+                        tabIndex={isLoading ? -1 : 0}
+                        className={cn(chipBaseClasses, isLoading && chipDisabledClasses, "cursor-pointer hover:scale-105 snap-start")}
                         style={chipStyle}
-                        onClick={(e) => { if (isLoading) e.preventDefault(); }}
+                        onClick={() => !isLoading && handleChipClick(chip)}
+                        onKeyDown={(e) => {
+                          if (!isLoading && (e.key === 'Enter' || e.key === ' ')) {
+                            e.preventDefault(); 
+                            handleChipClick(chip);
+                          }
+                        }}
                         aria-disabled={isLoading}
                       >
                         {chipContent}
-                      </a>
-                    </Link>
-                  );
-                }
-                
-                return (
-                  <div
-                    key={chip.id}
-                    role="button"
-                    tabIndex={isLoading ? -1 : 0}
-                    className={cn(chipBaseClasses, isLoading && chipDisabledClasses, "cursor-pointer")}
-                    style={chipStyle}
-                    onClick={() => !isLoading && handleChipClick(chip)}
-                    onKeyDown={(e) => {
-                      if (!isLoading && (e.key === 'Enter' || e.key === ' ')) {
-                        e.preventDefault(); // Prevent page scroll on space
-                        handleChipClick(chip);
-                      }
-                    }}
-                    aria-disabled={isLoading}
-                  >
-                    {chipContent}
-                  </div>
-                );
-              })}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </>
         )}
       </div>
+      <style jsx global>{`
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .no-scrollbar {
+          -ms-overflow-style: none; 
+          scrollbar-width: none; 
+        }
+      `}</style>
     </div>
   );
 }
-
