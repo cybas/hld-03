@@ -24,7 +24,12 @@ import {
   History,
   HelpCircle,
   FileUp,
-  // MessageSquare // Not used in this file directly for initial view
+  BriefcaseMedical, // Changed from UserCheck for better visual
+  ListOrdered,    // Changed from ListChecks
+  Archive,       // Changed from ShoppingBag
+  NotebookText,   // Changed for Ingredient Checker
+  MessageCircleQuestion, // Changed for FAQs
+  UploadCloud     // Changed for Document Upload
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import useChatScroll from '@/hooks/use-chat-scroll';
@@ -55,23 +60,30 @@ interface FeatureChip {
 }
 
 const featureChipsData: FeatureChip[] = [
-  { id: 'assessment', icon: UserCheck, text: 'Hair-Loss Assessment', color: '#6A4BF6', actionType: 'link', actionValue: '/assessment/step1' },
-  { id: 'plans', icon: ListChecks, text: 'Treatment Plans', color: '#F6A34B', actionType: 'chat', actionValue: 'Tell me about common treatment plans for hair loss.' },
-  { id: 'finder', icon: ShoppingBag, text: 'Product Finder', color: '#F56C6C', actionType: 'chat', actionValue: 'Help me find products for my hair type.' },
+  { id: 'assessment', icon: BriefcaseMedical, text: 'Hair-Loss Assessment', color: '#6A4BF6', actionType: 'link', actionValue: '/assessment/step1' },
+  { id: 'plans', icon: ListOrdered, text: 'Treatment Plans', color: '#F6A34B', actionType: 'chat', actionValue: 'Tell me about common treatment plans for hair loss.' },
+  { id: 'finder', icon: Archive, text: 'Product Finder', color: '#F56C6C', actionType: 'chat', actionValue: 'Help me find products for my hair type.' },
   { id: 'consult', icon: CalendarDays, text: 'Book Consultation', color: '#F6C14B', actionType: 'chat', actionValue: 'How can I book a consultation?' },
   { id: 'progress', icon: LineChart, text: 'Track Progress', color: '#4BCB6A', actionType: 'chat', actionValue: 'How can I track my hair growth progress?' },
-  { id: 'ingredient', icon: FlaskConical, text: 'Ingredient Checker', color: '#F64BC1', actionType: 'chat', actionValue: 'Can you help me check some hair product ingredients?' },
+  { id: 'ingredient', icon: NotebookText, text: 'Ingredient Checker', color: '#F64BC1', actionType: 'chat', actionValue: 'Can you help me check some hair product ingredients?' },
   { id: 'tips', icon: Lightbulb, text: 'Hair-Care Tips', color: '#4BB7F6', actionType: 'chat', actionValue: 'Give me some general hair care tips.' },
   { id: 'history', icon: History, text: 'Diagnosis History', color: '#9A6AF6', actionType: 'chat', actionValue: 'Where can I find my diagnosis history?' },
-  { id: 'faq', icon: HelpCircle, text: 'FAQs', color: '#F6B94B', actionType: 'chat', actionValue: 'What are some frequently asked questions about hair loss?' },
-  { id: 'upload', icon: FileUp, text: 'Document Upload', color: '#4B6AF6', actionType: 'chat', actionValue: 'How can I upload documents?' },
+  { id: 'faq', icon: MessageCircleQuestion, text: 'FAQs', color: '#F6B94B', actionType: 'chat', actionValue: 'What are some frequently asked questions about hair loss?' },
+  { id: 'upload', icon: UploadCloud, text: 'Document Upload', color: '#4B6AF6', actionType: 'chat', actionValue: 'How can I upload documents?' },
 ];
 
 // Helper function to convert hex to rgba
 const hexToRgba = (hex: string, alpha: number): string => {
+  if (!hex || typeof hex !== 'string' || !hex.startsWith('#')) {
+    // Return a default or transparent color if hex is invalid to prevent errors
+    return `rgba(0, 0, 0, ${alpha})`; 
+  }
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
+  if (isNaN(r) || isNaN(g) || isNaN(b)) {
+    return `rgba(0, 0, 0, ${alpha})`; // Fallback for parsing errors
+  }
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
 
@@ -155,7 +167,12 @@ export default function InstaAIPage() {
     if (chip.actionType === 'chat') {
       handleSendMessage(chip.actionValue, true);
     }
+    // Link actions are handled by the Link component itself
   };
+
+  const chipBaseClasses = "h-11 w-full rounded-full text-sm font-medium flex items-center justify-center gap-2 px-3 border transition-all duration-150 ease-out active:scale-95 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-ring";
+  const chipDisabledClasses = "opacity-70 cursor-not-allowed pointer-events-none";
+
 
   return (
     <div className="flex flex-col items-center justify-start min-h-screen bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white to-[#FAFAFF] p-4 sm:p-6 font-body">
@@ -261,44 +278,50 @@ export default function InstaAIPage() {
               {featureChipsData.map((chip) => {
                 const chipContent = (
                   <>
-                    <chip.icon className="h-4 w-4" /> {/* Icon color will be inherited from parent's text color */}
+                    <chip.icon className="h-4 w-4" />
                     <span>{chip.text}</span>
                   </>
                 );
                 
-                const chipClasses = cn(
-                  "h-11 w-full rounded-full text-sm font-medium flex items-center justify-center gap-2 px-3 border transition-all duration-150 ease-out active:scale-95 hover:scale-105 focus-visible:ring-2 focus-visible:ring-offset-2",
-                  isLoading && "opacity-70 cursor-not-allowed"
-                );
-
                 const chipStyle: React.CSSProperties = {
                   borderColor: chip.color,
                   color: chip.color,
-                  backgroundColor: hexToRgba(chip.color, 0.04), // 4% transparent fill
+                  backgroundColor: hexToRgba(chip.color, 0.04),
                 };
                 
-                return chip.actionType === 'link' ? (
-                  <Link key={chip.id} href={chip.actionValue} passHref legacyBehavior>
-                    <a 
-                      className={chipClasses}
-                      style={chipStyle}
-                      onClick={(e) => { if (isLoading) e.preventDefault(); }}
-                      aria-disabled={isLoading}
-                    >
-                      {chipContent}
-                    </a>
-                  </Link>
-                ) : (
-                  <Button
+                if (chip.actionType === 'link') {
+                  return (
+                    <Link key={chip.id} href={chip.actionValue} passHref legacyBehavior>
+                      <a 
+                        className={cn(chipBaseClasses, isLoading && chipDisabledClasses)}
+                        style={chipStyle}
+                        onClick={(e) => { if (isLoading) e.preventDefault(); }}
+                        aria-disabled={isLoading}
+                      >
+                        {chipContent}
+                      </a>
+                    </Link>
+                  );
+                }
+                
+                return (
+                  <div
                     key={chip.id}
-                    variant="outline" // Keep variant="outline" to remove default button background before applying ours
-                    className={chipClasses}
+                    role="button"
+                    tabIndex={isLoading ? -1 : 0}
+                    className={cn(chipBaseClasses, isLoading && chipDisabledClasses, "cursor-pointer")}
                     style={chipStyle}
-                    onClick={() => handleChipClick(chip)}
-                    disabled={isLoading}
+                    onClick={() => !isLoading && handleChipClick(chip)}
+                    onKeyDown={(e) => {
+                      if (!isLoading && (e.key === 'Enter' || e.key === ' ')) {
+                        e.preventDefault(); // Prevent page scroll on space
+                        handleChipClick(chip);
+                      }
+                    }}
+                    aria-disabled={isLoading}
                   >
                     {chipContent}
-                  </Button>
+                  </div>
                 );
               })}
             </div>
@@ -308,3 +331,4 @@ export default function InstaAIPage() {
     </div>
   );
 }
+
