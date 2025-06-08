@@ -13,13 +13,13 @@ import {
   SendHorizontal, 
   Search, 
   Lightbulb,
-  BriefcaseMedical, 
   ListOrdered,    
   Archive,       
   CalendarDays,
   NotebookText,  
   MessageCircleQuestion, 
-  History
+  History,
+  ShieldCheck // Added ShieldCheck
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import useChatScroll from '@/hooks/use-chat-scroll';
@@ -27,7 +27,7 @@ import { MessageBubble } from '@/components/chat/message-bubble';
 import { TypingIndicator } from '@/components/chat/typing-indicator';
 import { formatAIResponse } from '@/utils/responseFormatter';
 
-// Custom SVG Icon for the header (re-used from original)
+// Custom SVG Icon for the header
 const AiTrichologistIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#6A4BF6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
     <path d="M12 8V4H8"/>
@@ -66,17 +66,20 @@ const featureChipsData: FeatureChip[] = [
   { id: 'tips', icon: Lightbulb, text: 'Hair-Care Tips', color: '#4BB7F6', actionType: 'chat', actionValue: 'Give me some general hair care tips.' },
   { id: 'history', icon: History, text: 'Diagnosis History', color: '#9A6AF6', actionType: 'chat', actionValue: 'Where can I find my diagnosis history?' },
   { id: 'faq', icon: MessageCircleQuestion, text: 'FAQs', color: '#F6B94B', actionType: 'chat', actionValue: 'What are some frequently asked questions about hair loss?' },
+  { id: 'scalp-care', icon: ShieldCheck, text: 'Scalp Care Guide', color: '#4BE0A0', actionType: 'chat', actionValue: 'Tell me about scalp care routines.' },
 ];
 
 const hexToRgba = (hex: string, alpha: number): string => {
   if (!hex || typeof hex !== 'string' || !hex.startsWith('#')) {
-    return `rgba(0,0,0,${alpha})`; 
+    console.warn(`Invalid hex color: ${hex}. Using default fallback.`);
+    return `rgba(106,75,246,${alpha})`; // Default to primary accent with alpha
   }
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
   if (isNaN(r) || isNaN(g) || isNaN(b)) {
-    return `rgba(0,0,0,${alpha})`;
+    console.warn(`Error parsing hex color: ${hex}. Using default fallback.`);
+    return `rgba(106,75,246,${alpha})`;
   }
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
@@ -97,7 +100,7 @@ export default function InstaAIPage() {
   }, [isChatActive]);
   
   useEffect(() => {
-    document.title = 'Chat with HairLossDoctor.AI';
+    document.title = 'Chat with HairlossDoctor.AI';
   }, []);
 
   const handleSendMessage = async (text: string, fromQuickActionOrChip = false) => {
@@ -158,7 +161,7 @@ export default function InstaAIPage() {
     }
   };
 
-  const chipBaseClasses = "h-11 w-full rounded-full text-sm font-medium flex items-center justify-center gap-2 px-3 border transition-all duration-150 ease-out active:scale-95 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-ring";
+  const chipBaseClasses = "h-11 w-full rounded-full text-sm font-medium flex items-center justify-center gap-2 px-3 border transition-all duration-150 ease-out active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-ring hover:scale-105";
   const chipDisabledClasses = "opacity-70 cursor-not-allowed pointer-events-none";
 
   return (
@@ -271,7 +274,7 @@ export default function InstaAIPage() {
                 {featureChipsData.map((chip) => {
                   const chipContent = (
                     <>
-                      <chip.icon className="h-4 w-4" style={{ color: chip.color }} />
+                      <chip.icon className="h-4 w-4" />
                       <span className="text-slate-700 opacity-70">{chip.text}</span>
                     </>
                   );
@@ -279,13 +282,14 @@ export default function InstaAIPage() {
                   const chipStyle: React.CSSProperties = {
                     borderColor: chip.color,
                     backgroundColor: hexToRgba(chip.color, 0.04),
+                    color: chip.color, // Icon color
                   };
                   
                   if (chip.actionType === 'link') {
                     return (
                       <Link key={chip.id} href={chip.actionValue} passHref legacyBehavior>
                         <a 
-                          className={cn(chipBaseClasses, isLoading && chipDisabledClasses, "hover:scale-105")}
+                          className={cn(chipBaseClasses, isLoading && chipDisabledClasses)}
                           style={chipStyle}
                           onClick={(e) => { if (isLoading) e.preventDefault(); }}
                           aria-disabled={isLoading}
@@ -301,7 +305,7 @@ export default function InstaAIPage() {
                       key={chip.id}
                       role="button"
                       tabIndex={isLoading ? -1 : 0}
-                      className={cn(chipBaseClasses, isLoading && chipDisabledClasses, "cursor-pointer hover:scale-105")}
+                      className={cn(chipBaseClasses, isLoading && chipDisabledClasses, "cursor-pointer")}
                       style={chipStyle}
                       onClick={() => !isLoading && handleChipClick(chip)}
                       onKeyDown={(e) => {
@@ -323,7 +327,7 @@ export default function InstaAIPage() {
                    {featureChipsData.map((chip) => {
                     const chipContent = (
                       <>
-                        <chip.icon className="h-4 w-4" style={{ color: chip.color }} />
+                        <chip.icon className="h-4 w-4" />
                         <span className="text-slate-700 opacity-70">{chip.text}</span>
                       </>
                     );
@@ -331,6 +335,7 @@ export default function InstaAIPage() {
                     const chipStyle: React.CSSProperties = {
                       borderColor: chip.color,
                       backgroundColor: hexToRgba(chip.color, 0.04),
+                      color: chip.color, // Icon color
                       width: '160px', 
                     };
                     
@@ -338,7 +343,7 @@ export default function InstaAIPage() {
                       return (
                         <Link key={chip.id} href={chip.actionValue} passHref legacyBehavior>
                           <a 
-                            className={cn(chipBaseClasses, isLoading && chipDisabledClasses, "hover:scale-105 snap-start")}
+                            className={cn(chipBaseClasses, isLoading && chipDisabledClasses, "snap-start")}
                             style={chipStyle}
                             onClick={(e) => { if (isLoading) e.preventDefault(); }}
                             aria-disabled={isLoading}
@@ -354,7 +359,7 @@ export default function InstaAIPage() {
                         key={chip.id}
                         role="button"
                         tabIndex={isLoading ? -1 : 0}
-                        className={cn(chipBaseClasses, isLoading && chipDisabledClasses, "cursor-pointer hover:scale-105 snap-start")}
+                        className={cn(chipBaseClasses, isLoading && chipDisabledClasses, "cursor-pointer snap-start")}
                         style={chipStyle}
                         onClick={() => !isLoading && handleChipClick(chip)}
                         onKeyDown={(e) => {
@@ -387,4 +392,3 @@ export default function InstaAIPage() {
     </div>
   );
 }
-
