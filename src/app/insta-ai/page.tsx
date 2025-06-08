@@ -1,21 +1,32 @@
 
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, ReactNode } from 'react';
 import Link from 'next/link';
 import { Pill, ShoppingBag, CalendarDays, Sparkles, ClipboardList, FileText, BookOpen, ShieldCheck } from 'lucide-react';
 
-const RolePill = ({ label, value, color, emoji, onSelect }: { label: string, value: string, color: string, emoji: string, onSelect: (value: string) => void }) => (
-  <button
-    onClick={() => onSelect(value)}
-    className={`flex items-center gap-2 px-6 py-3 rounded-xl text-white font-semibold
-                transition-transform duration-150 hover:scale-105 focus:outline-none focus:ring-2 ${color}`}
-  >
-    <span className="text-xl">{emoji}</span> {label}
-  </button>
-);
+// Helper for chip background colors
+const hexToRgba = (hex: string, alpha: number): string => {
+  if (!hex || typeof hex !== 'string' || !hex.startsWith('#') || (hex.length !== 4 && hex.length !== 7)) {
+    // console.warn('Invalid hex color provided to hexToRgba:', hex);
+    return `rgba(0,0,0,${alpha})`; // Fallback color
+  }
+  let r, g, b;
+  if (hex.length === 4) { // #RGB format
+    r = parseInt(hex[1] + hex[1], 16);
+    g = parseInt(hex[2] + hex[2], 16);
+    b = parseInt(hex[3] + hex[3], 16);
+  } else { // #RRGGBB format
+    r = parseInt(hex.slice(1, 3), 16);
+    g = parseInt(hex.slice(3, 5), 16);
+    b = parseInt(hex.slice(5, 7), 16);
+  }
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
 
 const featureChipsData = [
+  // "Hair-Loss Assessment" chip removed as per earlier request.
   { name: 'Treatment Plans', IconComponent: Pill, color: '#F6A34B', action: "Tell me about treatment plans" },
   { name: 'Product Finder', IconComponent: ShoppingBag, color: '#F56C6C', action: "Help me find hair products" },
   { name: 'Book Consultation', IconComponent: CalendarDays, color: '#F6C14B', action: "/assessment/step1", isLink: true },
@@ -26,46 +37,77 @@ const featureChipsData = [
   { name: 'Scalp Care Guide', IconComponent: ShieldCheck, color: '#4BE0A0', action: "Tell me about scalp care" },
 ];
 
-const hexToRgba = (hex: string, alpha: number) => {
-  if (!hex || typeof hex !== 'string' || !hex.startsWith('#')) {
-    console.warn('Invalid hex color provided to hexToRgba:', hex);
-    return `rgba(0,0,0,${alpha})`; // Fallback color
-  }
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-};
+// Minimalist hair follicle SVG
+const HairFollicleSVG = () => (
+  <svg width="100" height="100" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.03] pointer-events-none">
+    <path d="M10 19C12.2091 19 14 17.2091 14 15V12H12V15C12 16.1046 11.1046 17 10 17C8.89543 17 8 16.1046 8 15V12H6V15C6 17.2091 7.79086 19 10 19Z" fill="currentColor"/>
+    <path d="M11 1H9V12H11V1Z" fill="currentColor"/>
+    <rect x="7" y="11" width="6" height="2" rx="1" fill="currentColor"/>
+  </svg>
+);
+
 
 export default function HairLossLanding() {
-  /* ───────── state ───────── */
-  const [userType, setUserType] = useState<string | null>(null);
-  const [chatHistory, setChatHistory] = useState<{ sender: string, text: string }[]>([]);
-  const [input, setInput] = useState('');
+  /* ─── state additions (top of component) ─── */
+  const [userType, setUserType] = useState<string | null>(null);   // 'doctor' | 'patient' | 'other'
+  const [chatStarted, setChatStarted] = useState(false);
+  const [history, setHistory] = useState<{who: string, text: string}[]>([]);
+  const [draft, setDraft] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  /* ───────── effects ─────── */
-  useEffect(() => {
-    if (userType && chatHistory.length > 0) {
-      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  /* ─── canned greetings ─── */
+  const greet: Record<string, string> = {
+    doctor : 'Hello colleague! Ready to discuss hair-loss cases and protocols.',
+    patient: 'Hi there! Let’s talk about your hair health and solutions.',
+    other  : 'Hello! What would you like to know about hair loss?'
+  };
+
+  /* ─── helpers ─── */
+  const selectRole = (role: string) => setUserType(role);
+
+  const startAssessment = () => {
+    if (!userType || chatStarted) return;          // force role first
+    setChatStarted(true);
+    setHistory([{ who: 'ai', text: greet[userType as string] }]);
+  };
+
+  const send = async () => {
+    if (!draft.trim() || !userType) return; // Also ensure userType is selected
+    const msg = draft.trim();
+    setHistory((h) => [...h, { who: 'user', text: msg }]);
+    setDraft('');
+
+    try {
+      const r = await fetch('/api/general-chat', {
+        method : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body   : JSON.stringify({ message: msg, userType })
+      });
+      const { response } = await r.json();
+      // Basic formatting for AI response (mostly handled by Bedrock)
+      const formattedResponse = response
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/^- /gm, '• ')
+        .replace(/\n/g, '<br>');
+      setHistory((h) => [...h, { who: 'ai', text: formattedResponse }]);
+    } catch {
+      setHistory((h) => [...h, { who: 'ai', text: 'Sorry, something went wrong.' }]);
     }
-  }, [chatHistory, userType]);
-
-  /* ───────── helpers ─────── */
-  const welcomeMessages: Record<string, string> = {
-    doctor: 'Hello colleague! Ready to discuss hair-loss cases and protocols.',
-    patient: 'Hi there! Ask me anything about hair loss in simple terms.',
-    other: 'Hello! What would you like to know about hair loss?'
   };
-
-  const chooseRole = (role: string) => {
-    setUserType(role);
-    setChatHistory([{ sender: 'ai', text: welcomeMessages[role] }]);
-  };
-
+  
   const sendQuickAction = async (actionText: string) => {
-    if (!userType) return;
-    setChatHistory((h) => [...h, { sender: 'user', text: actionText }]);
+    if (!userType) { 
+      // Optionally prompt user to select a role first, or auto-select 'patient'
+      // For now, let's assume they need to pick a role before quick actions
+      alert("Please select your role first (Doctor, Patient, or Other).");
+      return;
+    }
+    if (!chatStarted) {
+      setChatStarted(true);
+      setHistory([{ who: 'ai', text: greet[userType as string] }]); // Start chat with greeting
+    }
+
+    setHistory((h) => [...h, { who: 'user', text: actionText }]);
     try {
       const r = await fetch('/api/general-chat', {
         method: 'POST',
@@ -73,214 +115,211 @@ export default function HairLossLanding() {
         body: JSON.stringify({ message: actionText, userType })
       });
       const { response } = await r.json();
-      setChatHistory((h) => [...h, { sender: 'ai', text: response }]);
-    } catch (err) {
-      console.error('Quick action chat error:', err);
-      setChatHistory((h) => [
-        ...h,
-        { sender: 'ai', text: 'Sorry, something went wrong processing that action.' }
-      ]);
-    }
-  };
-  
-  const sendMessage = async () => {
-    if (!input.trim() || !userType) return;
-    const text = input.trim();
-    setChatHistory((h) => [...h, { sender: 'user', text }]);
-    setInput('');
-    try {
-      const r = await fetch('/api/general-chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, userType })
-      });
-      const { response } = await r.json();
-      setChatHistory((h) => [...h, { sender: 'ai', text: response }]);
+      const formattedResponse = response
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/^- /gm, '• ')
+        .replace(/\n/g, '<br>');
+      setHistory((h) => [...h, { who: 'ai', text: formattedResponse }]);
     } catch (err){
-      console.error('Chat send error:', err);
-      setChatHistory((h) => [
+      console.error('Quick action chat error:', err);
+      setHistory((h) => [
         ...h,
-        { sender: 'ai', text: 'Sorry, something went wrong.' }
+        { who: 'ai', text: 'Sorry, something went wrong processing that action.' }
       ]);
     }
   };
 
+
+  /* scroll on new message */
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [history]);
+
   /* ───────── UI ──────────── */
   return (
-    <div className="min-h-screen flex flex-col items-center bg-indigo-50/20">
-      {/* ── NAVBAR ── */}
-      <header className="w-full flex items-center justify-between px-6 py-3 bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-40">
+    <div className="min-h-screen flex flex-col items-center bg-indigo-50/20 bg-[radial-gradient(ellipse_120%_90%_at_50%_0%,_white_0%,_rgba(250,250,255,0.7)_100%)]">
+      {/* ── NAVBAR (Sticky) ── */}
+      <header className="w-full flex items-center justify-between px-4 sm:px-6 py-3 bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-40">
         <Link href="/insta-ai" className="flex items-center gap-2 font-bold text-indigo-700">
-          <span className="text-2xl">📋</span> HairlossDoctor.AI
+          {/* Replace with AiTrichologistIconHeader if available or similar SVG */}
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
+            <path d="M12 8V4H8"/>
+            <rect x="4" y="4" width="16" height="16" rx="2"/>
+            <path d="M12 12h.01M16 12h.01M8 12h.01M12 16h.01M16 16h.01M8 16h.01"/>
+            <path d="M9 20v-2h6v2"/>
+            <circle cx="9" cy="10" r="0.5" fill="currentColor"/>
+            <circle cx="15" cy="10" r="0.5" fill="currentColor"/>
+            <path d="M12 6.5V9.5M10.5 8H13.5"/>
+          </svg>
+          HairlossDoctor.AI
         </Link>
-        <nav className="space-x-6">
-          <a href="#" className="text-sm text-gray-600 hover:text-indigo-600">Login</a>
-          <a href="#" className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm hover:bg-indigo-700 transition-colors">Sign Up</a>
+        <nav className="space-x-3 sm:space-x-6">
+          <a href="#" className="text-xs sm:text-sm text-gray-600 hover:text-indigo-600">Login</a>
+          <a href="#" className="px-3 py-1.5 sm:px-4 sm:py-2 bg-indigo-600 text-white rounded-xl text-xs sm:text-sm hover:bg-indigo-700 transition-colors">Sign Up</a>
         </nav>
       </header>
 
       {/* ── HERO SECTION ── */}
       <main className="w-full flex flex-col items-center px-4 pt-12 pb-12 flex-grow">
-        <span className="text-4xl">🤖</span>
-        <h1 className="mt-4 text-3xl font-bold text-indigo-800 text-center">
+        <div className="relative">
+          <HairFollicleSVG />
+          <span className="text-4xl relative z-10">🤖</span>
+        </div>
+        <h1 className="mt-4 text-3xl font-bold text-indigo-800 text-center relative z-10">
           Hello, I’m HairlossDoctor.AI
         </h1>
-        <p className="mt-2 text-gray-600 text-center">
+        <p className="mt-2 text-gray-600 text-center relative z-10">
           Your personal AI trichologist—how can I help you today?
         </p>
 
-        {/* chat input card & history (only show when role chosen) */}
-        <div className="w-full max-w-xl mt-10">
-          {userType && (
-            <>
-              <div className="flex flex-col gap-3 bg-white/80 border border-gray-200 rounded-2xl shadow-lg p-4 backdrop-blur-sm">
-                <input
-                  className="w-full border-none focus:outline-none placeholder-gray-500 bg-transparent p-2 text-sm"
-                  placeholder="Ask me anything about hair-loss care…"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-                />
-                <div className="flex items-center justify-between">
-                  <div className="flex gap-2 text-sm">
-                    <span 
-                      onClick={() => sendQuickAction('Tell me about Hair Scan')}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-indigo-300/70 text-indigo-700 cursor-pointer hover:bg-indigo-100/70 transition-colors"
-                    >
-                      🔍 Hair Scan
-                    </span>
-                    <span 
-                      onClick={() => sendQuickAction('Suggest some Routine Ideas')}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-indigo-300/70 text-indigo-700 cursor-pointer hover:bg-indigo-100/70 transition-colors"
-                    >
-                      💡 Routine Ideas
-                    </span>
-                  </div>
-                  <button
-                    onClick={sendMessage}
-                    disabled={!input.trim()}
-                    className="p-2.5 h-9 w-9 flex items-center justify-center rounded-full bg-indigo-600 text-white disabled:opacity-50 hover:bg-indigo-700 transition-colors"
-                    aria-label="Send message"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                  </button>
+        {/* ① Chat card */}
+        <div className="w-full max-w-xl mt-12 bg-white/70 border border-gray-200 rounded-2xl shadow-md backdrop-blur-sm flex flex-col">
+          {/* message list (visible after chat starts) */}
+          {chatStarted && (
+            <div className="max-h-72 overflow-y-auto flex flex-col gap-3 p-5">
+              {history.map((m, i) => (
+                <div
+                  key={i}
+                  className={`max-w-[85%] text-sm leading-relaxed px-4 py-2 rounded-2xl
+                              ${m.who === 'user'
+                                ? 'ml-auto bg-indigo-50 text-gray-900'
+                                : 'mr-auto bg-indigo-600 text-white'}`}
+                  dangerouslySetInnerHTML={{ __html: m.text }} // Render basic HTML from AI
+                >
                 </div>
-              </div>
-
-              {/* chat history */}
-              <div className="mt-6 space-y-3 max-h-[50vh] overflow-y-auto pb-4 pr-1"> {/* Added pr-1 for scrollbar space */}
-                {chatHistory.map((m, i) => (
-                  <div
-                    key={i}
-                    className={`max-w-[85%] px-4 py-2.5 rounded-xl text-sm leading-relaxed shadow-sm
-                                ${m.sender === 'user'
-                                  ? 'ml-auto bg-indigo-100 text-indigo-900'
-                                  : 'mr-auto bg-indigo-600 text-white'}`}
-                  >
-                    {m.text}
-                  </div>
-                ))}
-                <div ref={bottomRef} />
-              </div>
-            </>
+              ))}
+              <div ref={bottomRef} />
+            </div>
           )}
+
+          {/* input row */}
+          <div className={`flex items-center gap-3 p-5 ${chatStarted ? 'pt-3 border-t border-gray-100' : 'pt-5'}`}>
+            <input
+              className="flex-1 bg-transparent placeholder-gray-400 focus:outline-none"
+              placeholder="Ask me anything about hair-loss care…"
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && send()}
+              disabled={!chatStarted}
+            />
+            <button
+              onClick={send}
+              disabled={!chatStarted || !draft.trim()}
+              className="p-2 rounded-full bg-indigo-600 text-white disabled:opacity-40"
+              aria-label="Send message"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            </button>
+          </div>
         </div>
 
-        {/* primary CTA (still visible even if role chosen) */}
-        {!userType && (
-            <Link href="/assessment/step1" legacyBehavior>
-              <a className="mt-8 px-8 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 hover:scale-105 transition-transform duration-150 ease-out">
-                Start Hair-Loss Assessment
-              </a>
-            </Link>
+        {/* ② CTA + role pills */}
+        {/* primary CTA – goes live once a role is picked */}
+        {!chatStarted && (
+            <button
+            onClick={startAssessment}
+            disabled={!userType}
+            className={`mt-8 px-8 py-3 rounded-xl font-semibold transition-all duration-150 ease-out
+                        hover:scale-105
+                        ${userType ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                                    : 'bg-indigo-200 text-indigo-500 cursor-not-allowed opacity-70'}`}
+            >
+            Start Chatting with AI
+            </button>
+        )}
+
+        {/* role-selection row */}
+        {!chatStarted && (
+            <div className="mt-6 flex flex-wrap justify-center gap-3 sm:gap-4">
+            <button
+                onClick={() => selectRole('doctor')}
+                className={`flex items-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 rounded-xl text-white font-semibold
+                            bg-indigo-600 transition-all duration-150 ease-out hover:scale-105 hover:bg-indigo-700
+                            ${userType === 'doctor' ? 'ring-2 ring-offset-2 ring-indigo-400 ring-offset-indigo-50/20' : 'ring-1 ring-inset ring-white/20'}`}
+            >
+                👨‍⚕️ Doctor
+            </button>
+
+            <button
+                onClick={() => selectRole('patient')}
+                className={`flex items-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 rounded-xl text-white font-semibold
+                            bg-emerald-500 transition-all duration-150 ease-out hover:scale-105 hover:bg-emerald-600
+                            ${userType === 'patient' ? 'ring-2 ring-offset-2 ring-emerald-300 ring-offset-indigo-50/20' : 'ring-1 ring-inset ring-white/20'}`}
+            >
+                🧑‍🦱 Patient
+            </button>
+
+            <button
+                onClick={() => selectRole('other')}
+                className={`flex items-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 rounded-xl text-white font-semibold
+                            bg-violet-500 transition-all duration-150 ease-out hover:scale-105 hover:bg-violet-600
+                            ${userType === 'other' ? 'ring-2 ring-offset-2 ring-violet-300 ring-offset-indigo-50/20' : 'ring-1 ring-inset ring-white/20'}`}
+            >
+                👤 Other
+            </button>
+            </div>
         )}
         
-
-        {/* feature chips grid (only show if role NOT chosen) */}
-       {!userType && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4 mt-10 max-w-3xl w-full">
-            {featureChipsData.map((chip) => {
-              const chipStyle = {
-                borderColor: chip.color,
-                color: chip.color,
-                backgroundColor: hexToRgba(chip.color, 0.04),
-              };
-              const hoverStyle = {
-                 backgroundColor: hexToRgba(chip.color, 0.1),
-              };
-              const ChipContent = () => (
-                <>
-                  <chip.IconComponent className="w-5 h-5 mr-2" style={{ color: chip.color }} />
-                  <span className="font-medium text-sm" style={{ color: chip.color }}>{chip.name}</span>
-                </>
-              );
-
-              const chipClasses = "flex items-center justify-center h-11 px-3 rounded-full border transition-all duration-150 ease-out hover:scale-105 cursor-pointer";
-
-              if (chip.isLink) {
-                return (
-                  <Link href={chip.action} key={chip.name} legacyBehavior>
-                    <a 
-                      className={chipClasses}
-                      style={chipStyle}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = hoverStyle.backgroundColor}
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = chipStyle.backgroundColor}
-                    >
-                      <ChipContent />
-                    </a>
-                  </Link>
+        {/* Feature chips grid (visible only if chat hasn't started) */}
+        {!chatStarted && (
+          <div className="mt-10 w-full max-w-3xl">
+            <div className="sm:grid sm:grid-cols-[repeat(auto-fit,minmax(170px,1fr))] sm:gap-3 md:gap-4 
+                            block space-y-3 sm:space-y-0 
+                            sm:max-h-none max-h-[200px] overflow-y-auto sm:overflow-visible no-scrollbar"> {/* Horizontal scroll for mobile, grid for larger */}
+              {featureChipsData.map((chip) => {
+                const chipStyle = {
+                  borderColor: chip.color,
+                  color: chip.color, // Icon and border color
+                  backgroundColor: hexToRgba(chip.color, 0.04),
+                };
+                const textStyle = { color: '#4B5563' }; // slate-700 for text for contrast
+                const hoverStyle = {
+                   backgroundColor: hexToRgba(chip.color, 0.1),
+                };
+                const ChipContent = () => (
+                  <>
+                    <chip.IconComponent className="w-5 h-5 mr-1.5 sm:mr-2 flex-shrink-0" style={{ color: chip.color }} />
+                    <span className="font-medium text-xs sm:text-sm opacity-90" style={textStyle}>{chip.name}</span>
+                  </>
                 );
-              }
-              return (
-                <button
-                  key={chip.name}
-                  onClick={() => sendQuickAction(chip.action)}
-                  className={chipClasses}
-                  style={chipStyle}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = hoverStyle.backgroundColor}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = chipStyle.backgroundColor}
-                >
-                  <ChipContent />
-                </button>
-              );
-            })}
+
+                const chipClasses = "flex items-center justify-center h-11 px-3 rounded-full border transition-all duration-150 ease-out hover:scale-105 cursor-pointer w-full sm:w-auto text-left";
+                
+                if (chip.isLink) {
+                  return (
+                    <Link href={chip.action} key={chip.name} legacyBehavior>
+                      <a 
+                        className={chipClasses}
+                        style={chipStyle}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = hoverStyle.backgroundColor}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = chipStyle.backgroundColor}
+                      >
+                        <ChipContent />
+                      </a>
+                    </Link>
+                  );
+                }
+                return (
+                  <div // Changed to div for consistent styling behavior
+                    key={chip.name}
+                    onClick={() => sendQuickAction(chip.action)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && sendQuickAction(chip.action)}
+                    className={chipClasses}
+                    style={chipStyle}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = hoverStyle.backgroundColor}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = chipStyle.backgroundColor}
+                  >
+                    <ChipContent />
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
       </main>
-
-      {/* ── ROLE-SELECTION MODAL ── */}
-      {!userType && (
-        <div className="fixed inset-0 bg-slate-300/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl shadow-xl p-8 md:p-10 w-full max-w-md text-center">
-            <h2 className="text-xl font-semibold text-indigo-700 mb-6">
-              Tell me who you are:
-            </h2>
-            <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-3 sm:gap-4">
-              <RolePill
-                label="Doctor"
-                value="doctor"
-                emoji="👨‍⚕️"
-                color="bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-400"
-                onSelect={chooseRole}
-              />
-              <RolePill
-                label="Patient"
-                value="patient"
-                emoji="🧑‍🦱"
-                color="bg-emerald-500 hover:bg-emerald-600 focus:ring-emerald-300"
-                onSelect={chooseRole}
-              />
-              <RolePill
-                label="Other"
-                value="other"
-                emoji="👤"
-                color="bg-violet-500 hover:bg-violet-600 focus:ring-violet-300"
-                onSelect={chooseRole}
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
+
