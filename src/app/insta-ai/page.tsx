@@ -3,12 +3,11 @@
 
 import { useState, useRef, useEffect, ReactNode } from 'react';
 import Link from 'next/link';
-import { Pill, ShoppingBag, CalendarDays, Sparkles, ClipboardList, FileText, BookOpen, ShieldCheck } from 'lucide-react';
+import { Pill, ShoppingBag, CalendarDays, Sparkles, ClipboardList, FileText, BookOpen, ShieldCheck, SendHorizontal, Mic, Paperclip } from 'lucide-react';
 
 // Helper for chip background colors
 const hexToRgba = (hex: string, alpha: number): string => {
   if (!hex || typeof hex !== 'string' || !hex.startsWith('#') || (hex.length !== 4 && hex.length !== 7)) {
-    // console.warn('Invalid hex color provided to hexToRgba:', hex);
     return `rgba(0,0,0,${alpha})`; // Fallback color
   }
   let r, g, b;
@@ -24,9 +23,7 @@ const hexToRgba = (hex: string, alpha: number): string => {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
 
-
 const featureChipsData = [
-  // "Hair-Loss Assessment" chip removed as per earlier request.
   { name: 'Treatment Plans', IconComponent: Pill, color: '#F6A34B', action: "Tell me about treatment plans" },
   { name: 'Product Finder', IconComponent: ShoppingBag, color: '#F56C6C', action: "Help me find hair products" },
   { name: 'Book Consultation', IconComponent: CalendarDays, color: '#F6C14B', action: "/assessment/step1", isLink: true },
@@ -46,33 +43,34 @@ const HairFollicleSVG = () => (
   </svg>
 );
 
+interface Message {
+  who: 'user' | 'ai';
+  text: string;
+}
 
 export default function HairLossLanding() {
-  /* ─── state additions (top of component) ─── */
-  const [userType, setUserType] = useState<string | null>(null);   // 'doctor' | 'patient' | 'other'
+  const [userType, setUserType] = useState<string | null>(null);
   const [chatStarted, setChatStarted] = useState(false);
-  const [history, setHistory] = useState<{who: string, text: string}[]>([]);
+  const [history, setHistory] = useState<Message[]>([]);
   const [draft, setDraft] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  /* ─── canned greetings ─── */
   const greet: Record<string, string> = {
     doctor : 'Hello colleague! Ready to discuss hair-loss cases and protocols.',
     patient: 'Hi there! Let’s talk about your hair health and solutions.',
     other  : 'Hello! What would you like to know about hair loss?'
   };
 
-  /* ─── helpers ─── */
   const selectRole = (role: string) => setUserType(role);
 
-  const startAssessment = () => {
-    if (!userType || chatStarted) return;          // force role first
+  const startChatting = () => { // Renamed from startAssessment to startChatting
+    if (!userType || chatStarted) return;
     setChatStarted(true);
     setHistory([{ who: 'ai', text: greet[userType as string] }]);
   };
 
   const send = async () => {
-    if (!draft.trim() || !userType) return; // Also ensure userType is selected
+    if (!draft.trim() || !userType) return; // Ensure userType is selected
     const msg = draft.trim();
     setHistory((h) => [...h, { who: 'user', text: msg }]);
     setDraft('');
@@ -84,11 +82,11 @@ export default function HairLossLanding() {
         body   : JSON.stringify({ message: msg, userType })
       });
       const { response } = await r.json();
-      // Basic formatting for AI response (mostly handled by Bedrock)
+      // Basic formatting for AI response
       const formattedResponse = response
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/^- /gm, '• ')
-        .replace(/\n/g, '<br>');
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // **bold** to <strong>
+        .replace(/^- /gm, '• ') // Convert dash lists to bullet points
+        .replace(/\n/g, '<br>'); // Newlines to <br>
       setHistory((h) => [...h, { who: 'ai', text: formattedResponse }]);
     } catch {
       setHistory((h) => [...h, { who: 'ai', text: 'Sorry, something went wrong.' }]);
@@ -97,13 +95,11 @@ export default function HairLossLanding() {
   
   const sendQuickAction = async (actionText: string) => {
     if (!userType) { 
-      // Optionally prompt user to select a role first, or auto-select 'patient'
-      // For now, let's assume they need to pick a role before quick actions
       alert("Please select your role first (Doctor, Patient, or Other).");
       return;
     }
     if (!chatStarted) {
-      setChatStarted(true);
+      setChatStarted(true); // Start the chat if not already started
       setHistory([{ who: 'ai', text: greet[userType as string] }]); // Start chat with greeting
     }
 
@@ -129,37 +125,14 @@ export default function HairLossLanding() {
     }
   };
 
-
-  /* scroll on new message */
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [history]);
 
-  /* ───────── UI ──────────── */
   return (
     <div className="min-h-screen flex flex-col items-center bg-indigo-50/20 bg-[radial-gradient(ellipse_120%_90%_at_50%_0%,_white_0%,_rgba(250,250,255,0.7)_100%)]">
-      {/* ── NAVBAR (Sticky) ── */}
-      <header className="w-full flex items-center justify-between px-4 sm:px-6 py-3 bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-40">
-        <Link href="/insta-ai" className="flex items-center gap-2 font-bold text-indigo-700">
-          {/* Replace with AiTrichologistIconHeader if available or similar SVG */}
-          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
-            <path d="M12 8V4H8"/>
-            <rect x="4" y="4" width="16" height="16" rx="2"/>
-            <path d="M12 12h.01M16 12h.01M8 12h.01M12 16h.01M16 16h.01M8 16h.01"/>
-            <path d="M9 20v-2h6v2"/>
-            <circle cx="9" cy="10" r="0.5" fill="currentColor"/>
-            <circle cx="15" cy="10" r="0.5" fill="currentColor"/>
-            <path d="M12 6.5V9.5M10.5 8H13.5"/>
-          </svg>
-          HairlossDoctor.AI
-        </Link>
-        <nav className="space-x-3 sm:space-x-6">
-          <a href="#" className="text-xs sm:text-sm text-gray-600 hover:text-indigo-600">Login</a>
-          <a href="#" className="px-3 py-1.5 sm:px-4 sm:py-2 bg-indigo-600 text-white rounded-xl text-xs sm:text-sm hover:bg-indigo-700 transition-colors">Sign Up</a>
-        </nav>
-      </header>
+      {/* Global SiteHeader will be rendered by layout.tsx */}
 
-      {/* ── HERO SECTION ── */}
       <main className="w-full flex flex-col items-center px-4 pt-12 pb-12 flex-grow">
         <div className="relative">
           <HairFollicleSVG />
@@ -172,7 +145,7 @@ export default function HairLossLanding() {
           Your personal AI trichologist—how can I help you today?
         </p>
 
-        {/* ① Chat card */}
+        {/* Chat card */}
         <div className="w-full max-w-xl mt-12 bg-white/70 border border-gray-200 rounded-2xl shadow-md backdrop-blur-sm flex flex-col">
           {/* message list (visible after chat starts) */}
           {chatStarted && (
@@ -184,7 +157,7 @@ export default function HairLossLanding() {
                               ${m.who === 'user'
                                 ? 'ml-auto bg-indigo-50 text-gray-900'
                                 : 'mr-auto bg-indigo-600 text-white'}`}
-                  dangerouslySetInnerHTML={{ __html: m.text }} // Render basic HTML from AI
+                  dangerouslySetInnerHTML={{ __html: m.text }}
                 >
                 </div>
               ))}
@@ -200,7 +173,7 @@ export default function HairLossLanding() {
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && send()}
-              disabled={!chatStarted}
+              disabled={!chatStarted && !userType} // Disable if chat not started OR no user type yet
             />
             <button
               onClick={send}
@@ -208,27 +181,26 @@ export default function HairLossLanding() {
               className="p-2 rounded-full bg-indigo-600 text-white disabled:opacity-40"
               aria-label="Send message"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+              <SendHorizontal size={16} />
             </button>
           </div>
         </div>
 
-        {/* ② CTA + role pills */}
-        {/* primary CTA – goes live once a role is picked */}
+        {/* Primary CTA – goes live once a role is picked */}
         {!chatStarted && (
             <button
-            onClick={startAssessment}
+            onClick={startChatting} // Changed from startAssessment to startChatting
             disabled={!userType}
             className={`mt-8 px-8 py-3 rounded-xl font-semibold transition-all duration-150 ease-out
                         hover:scale-105
                         ${userType ? 'bg-indigo-600 text-white hover:bg-indigo-700'
                                     : 'bg-indigo-200 text-indigo-500 cursor-not-allowed opacity-70'}`}
             >
-            Start Chatting with AI
+            Start Chatting with AI {/* Changed text */}
             </button>
         )}
 
-        {/* role-selection row */}
+        {/* Role-selection row */}
         {!chatStarted && (
             <div className="mt-6 flex flex-wrap justify-center gap-3 sm:gap-4">
             <button
@@ -265,14 +237,14 @@ export default function HairLossLanding() {
           <div className="mt-10 w-full max-w-3xl">
             <div className="sm:grid sm:grid-cols-[repeat(auto-fit,minmax(170px,1fr))] sm:gap-3 md:gap-4 
                             block space-y-3 sm:space-y-0 
-                            sm:max-h-none max-h-[200px] overflow-y-auto sm:overflow-visible no-scrollbar"> {/* Horizontal scroll for mobile, grid for larger */}
+                            sm:max-h-none max-h-[200px] overflow-y-auto sm:overflow-visible no-scrollbar">
               {featureChipsData.map((chip) => {
                 const chipStyle = {
                   borderColor: chip.color,
-                  color: chip.color, // Icon and border color
+                  color: chip.color, 
                   backgroundColor: hexToRgba(chip.color, 0.04),
                 };
-                const textStyle = { color: '#4B5563' }; // slate-700 for text for contrast
+                const textStyle = { color: '#4B5563' }; // slate-700 for text
                 const hoverStyle = {
                    backgroundColor: hexToRgba(chip.color, 0.1),
                 };
@@ -300,7 +272,7 @@ export default function HairLossLanding() {
                   );
                 }
                 return (
-                  <div // Changed to div for consistent styling behavior
+                  <div 
                     key={chip.name}
                     onClick={() => sendQuickAction(chip.action)}
                     role="button"
@@ -322,4 +294,3 @@ export default function HairLossLanding() {
     </div>
   );
 }
-
