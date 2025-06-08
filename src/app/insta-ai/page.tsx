@@ -17,10 +17,8 @@ import {
   ListOrdered,    
   Archive,       
   CalendarDays,
-  LineChart,
   NotebookText,  
   MessageCircleQuestion, 
-  UploadCloud,
   History
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -61,16 +59,13 @@ interface FeatureChip {
 }
 
 const featureChipsData: FeatureChip[] = [
-  { id: 'assessment', icon: BriefcaseMedical, text: 'Hair-Loss Assessment', color: '#6A4BF6', actionType: 'link', actionValue: '/assessment/step1' },
   { id: 'plans', icon: ListOrdered, text: 'Treatment Plans', color: '#F6A34B', actionType: 'chat', actionValue: 'Tell me about common treatment plans for hair loss.' },
   { id: 'finder', icon: Archive, text: 'Product Finder', color: '#F56C6C', actionType: 'chat', actionValue: 'Help me find products for my hair type.' },
   { id: 'consult', icon: CalendarDays, text: 'Book Consultation', color: '#F6C14B', actionType: 'chat', actionValue: 'How can I book a consultation?' },
-  { id: 'progress', icon: LineChart, text: 'Track Progress', color: '#4BCB6A', actionType: 'chat', actionValue: 'How can I track my hair growth progress?' },
   { id: 'ingredient', icon: NotebookText, text: 'Ingredient Checker', color: '#F64BC1', actionType: 'chat', actionValue: 'Can you help me check some hair product ingredients?' },
   { id: 'tips', icon: Lightbulb, text: 'Hair-Care Tips', color: '#4BB7F6', actionType: 'chat', actionValue: 'Give me some general hair care tips.' },
   { id: 'history', icon: History, text: 'Diagnosis History', color: '#9A6AF6', actionType: 'chat', actionValue: 'Where can I find my diagnosis history?' },
   { id: 'faq', icon: MessageCircleQuestion, text: 'FAQs', color: '#F6B94B', actionType: 'chat', actionValue: 'What are some frequently asked questions about hair loss?' },
-  { id: 'upload', icon: UploadCloud, text: 'Document Upload', color: '#4B6AF6', actionType: 'chat', actionValue: 'How can I upload documents?' },
 ];
 
 const hexToRgba = (hex: string, alpha: number): string => {
@@ -272,7 +267,7 @@ export default function InstaAIPage() {
             </Button>
             
             <div className="w-full max-w-3xl">
-              <div className="sm:grid sm:grid-cols-[repeat(auto-fit,minmax(160px,1fr))] sm:gap-4 hidden"> {/* Hidden on small, grid on sm+ */}
+              <div className="sm:grid sm:grid-cols-[repeat(auto-fit,minmax(160px,1fr))] sm:gap-4 hidden">
                 {featureChipsData.map((chip) => {
                   const chipContent = (
                     <>
@@ -336,7 +331,7 @@ export default function InstaAIPage() {
                     const chipStyle: React.CSSProperties = {
                       borderColor: chip.color,
                       backgroundColor: hexToRgba(chip.color, 0.04),
-                      width: '160px', // ensure fixed width for scrollable items
+                      width: '160px', 
                     };
                     
                     if (chip.actionType === 'link') {
@@ -392,3 +387,4 @@ export default function InstaAIPage() {
     </div>
   );
 }
+
