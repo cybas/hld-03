@@ -12,12 +12,12 @@ export function SiteFooter() {
       {/* headline + CTA */}
       <div className="mx-auto max-w-4xl text-center px-4">
         <Image
-          src="/logo-mark.svg" // Updated src
+          src="https://hld-img.s3.me-central-1.amazonaws.com/logo/HLD+Logo.png" 
           alt="HairlossDoctor.AI Logo Mark"
           width={48}
           height={48}
           className="mx-auto h-12 w-12"
-          data-ai-hint="brand logo" // Updated data-ai-hint
+          data-ai-hint="brand logo"
         />
         <h2 className="mt-6 text-3xl font-semibold text-slate-100 sm:text-4xl">
           Unlock a new approach&nbsp;to healthy hair
@@ -25,8 +25,8 @@ export function SiteFooter() {
         <p className="mt-2 text-sm text-gray-400">
           Join thousands of doctors & patients already improving outcomes with HairlossDoctor.AI.
         </p>
-        <Link // Changed from <a> to <Link>
-          href="/assessment/step1" // Updated href to a relevant internal link
+        <Link
+          href="/assessment/step1"
           className="mt-8 inline-flex items-center gap-2 rounded-xl bg-[#6A4BF6] px-6 py-3 text-sm font-medium text-white shadow-sm transition hover:scale-105 hover:bg-[#5c42d6] active:scale-100"
         >
           Get started for free

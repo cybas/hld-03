@@ -26,12 +26,12 @@ export function SiteHeader() {
         <Link href="/" className="flex items-center gap-2 font-semibold
                                   text-[#6A4BF6]">
           <Image
-            src="/logo-mark.svg" // Updated src
+            src="https://hld-img.s3.me-central-1.amazonaws.com/logo/HLD+Logo.png" 
             alt="HairlossDoctor.AI Logo Mark"
             width={24}
             height={24}
             className="h-6 w-6"
-            data-ai-hint="brand logo" // Updated data-ai-hint
+            data-ai-hint="brand logo"
           />
           <span className="hidden sm:inline text-gray-900
                            dark:text-gray-100">HairlossDoctor.AI</span>
