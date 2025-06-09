@@ -3,10 +3,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image'; // Added for next/image
+import Image from 'next/image'; // Ensured next/image is imported
 import { Menu, X } from 'lucide-react';
 
-// Changed from 'export default function Header()' to 'export function SiteHeader()'
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
 
@@ -18,20 +17,24 @@ export function SiteHeader() {
   ];
 
   return (
-    <header className="sticky top-0 z-20 w-full bg-white/70 backdrop-blur border-b border-indigo-50/70 dark:bg-[#070707]/60 dark:border-white/10">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-20 w-full bg-white/70 backdrop-blur
+                       border-b border-indigo-50/70 dark:bg-[#070707]/60
+                       dark:border-white/10">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between
+                      px-4 sm:px-6 lg:px-8">
         {/* logo */}
-        <Link href="/" className="flex items-center gap-2 font-semibold text-[#6A4BF6]">
-          {/* Replaced img with Image component and placeholder src */}
-          <Image 
-            src="https://placehold.co/24x24.png" 
-            alt="HairlossDoctor.AI Logo Mark" 
-            width={24} 
-            height={24} 
+        <Link href="/" className="flex items-center gap-2 font-semibold
+                                  text-[#6A4BF6]">
+          <Image
+            src="/logo-mark.svg" // Updated src
+            alt="HairlossDoctor.AI Logo Mark"
+            width={24}
+            height={24}
             className="h-6 w-6"
-            data-ai-hint="logo brand" 
+            data-ai-hint="brand logo" // Updated data-ai-hint
           />
-          <span className="hidden sm:inline text-gray-900 dark:text-gray-100">HairlossDoctor.AI</span>
+          <span className="hidden sm:inline text-gray-900
+                           dark:text-gray-100">HairlossDoctor.AI</span>
         </Link>
 
         {/* desktop nav */}
@@ -39,18 +42,22 @@ export function SiteHeader() {
           {nav.map((n) => (
             <Link key={n.label}
               href={n.href}
-              className="text-sm font-medium text-gray-600 hover:text-[#6A4BF6] dark:text-gray-300 dark:hover:text-white">
+              className="text-sm font-medium text-gray-600 hover:text-[#6A4BF6]
+                         dark:text-gray-300 dark:hover:text-white">
               {n.label}
             </Link>
           ))}
 
           <Link href="#login"
-                className="text-sm font-medium text-gray-600 hover:text-[#6A4BF6] dark:text-gray-300 dark:hover:text-white">
+                className="text-sm font-medium text-gray-600 hover:text-[#6A4BF6]
+                           dark:text-gray-300 dark:hover:text-white">
             Login
           </Link>
 
           <Link href="#signup">
-            <button className="rounded-xl bg-[#6A4BF6] px-5 py-2 text-sm font-medium text-white transition hover:scale-105 active:scale-95">
+            <button className="rounded-xl bg-[#6A4BF6] px-5 py-2 text-sm
+                               font-medium text-white transition hover:scale-105
+                               active:scale-95">
               Sign Up
             </button>
           </Link>
@@ -68,25 +75,30 @@ export function SiteHeader() {
 
       {/* mobile drawer */}
       {open && (
-        <div className="md:hidden bg-white dark:bg-[#070707] border-t border-indigo-50/70 dark:border-white/10">
+        <div className="md:hidden bg-white dark:bg-[#070707] border-t
+                        border-indigo-50/70 dark:border-white/10">
           <div className="flex flex-col gap-6 px-6 py-6">
             {nav.map((n) => (
               <Link key={n.label}
                 href={n.href}
                 onClick={() => setOpen(false)}
-                className="text-sm font-medium text-gray-700 hover:text-[#6A4BF6] dark:text-gray-300 dark:hover:text-white">
+                className="text-sm font-medium text-gray-700 hover:text-[#6A4BF6]
+                           dark:text-gray-300 dark:hover:text-white">
                 {n.label}
               </Link>
             ))}
 
             <Link href="#login"
                   onClick={() => setOpen(false)}
-                  className="text-sm font-medium text-gray-700 hover:text-[#6A4BF6] dark:text-gray-300 dark:hover:text-white">
+                  className="text-sm font-medium text-gray-700 hover:text-[#6A4BF6]
+                             dark:text-gray-300 dark:hover:text-white">
               Login
             </Link>
 
             <Link href="#signup" onClick={() => setOpen(false)}>
-              <button className="w-full rounded-xl bg-[#6A4BF6] px-5 py-3 text-sm font-medium text-white transition hover:scale-105 active:scale-95">
+              <button className="w-full rounded-xl bg-[#6A4BF6] px-5 py-3 text-sm
+                                 font-medium text-white transition hover:scale-105
+                                 active:scale-95">
                 Sign Up
               </button>
             </Link>

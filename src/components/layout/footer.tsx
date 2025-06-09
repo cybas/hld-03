@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import Image from 'next/image';
 import { Download } from 'lucide-react';
@@ -10,13 +11,13 @@ export function SiteFooter() {
 
       {/* headline + CTA */}
       <div className="mx-auto max-w-4xl text-center px-4">
-        <Image 
-          src="https://placehold.co/48x48.png" 
-          alt="HairlossDoctor.AI Logo Mark" 
-          width={48} 
-          height={48} 
+        <Image
+          src="/logo-mark.svg" // Updated src
+          alt="HairlossDoctor.AI Logo Mark"
+          width={48}
+          height={48}
           className="mx-auto h-12 w-12"
-          data-ai-hint="logo brand" 
+          data-ai-hint="brand logo" // Updated data-ai-hint
         />
         <h2 className="mt-6 text-3xl font-semibold text-slate-100 sm:text-4xl">
           Unlock a new approach&nbsp;to healthy hair
@@ -24,8 +25,8 @@ export function SiteFooter() {
         <p className="mt-2 text-sm text-gray-400">
           Join thousands of doctors & patients already improving outcomes with HairlossDoctor.AI.
         </p>
-        <Link
-          href="/assessment/step1" // Updated to a relevant internal link
+        <Link // Changed from <a> to <Link>
+          href="/assessment/step1" // Updated href to a relevant internal link
           className="mt-8 inline-flex items-center gap-2 rounded-xl bg-[#6A4BF6] px-6 py-3 text-sm font-medium text-white shadow-sm transition hover:scale-105 hover:bg-[#5c42d6] active:scale-100"
         >
           Get started for free
@@ -38,37 +39,37 @@ export function SiteFooter() {
         <div>
           <h4 className="mb-4 text-sm font-medium text-gray-400">Platform</h4>
           <ul className="space-y-2 text-sm">
-            <li><Link href="#" className="hover:text-white">Features</Link></li>
-            <li><Link href="#" className="hover:text-white">Pricing</Link></li>
+            <li><Link href="#features" className="hover:text-white">Features</Link></li>
+            <li><Link href="#pricing" className="hover:text-white">Pricing</Link></li>
             <li><Link href="/assessment/step1" className="hover:text-white">Hair-Loss Assessment</Link></li>
-            <li><Link href="#" className="hover:text-white">AI Hair Scan</Link></li>
+            <li><Link href="#scanner" className="hover:text-white">AI Hair Scan</Link></li>
           </ul>
         </div>
         <div>
           <h4 className="mb-4 text-sm font-medium text-gray-400">Support</h4>
           <ul className="space-y-2 text-sm">
-            <li><Link href="#" className="hover:text-white">Help Center</Link></li>
-            <li><Link href="#" className="hover:text-white">Documentation</Link></li>
-            <li><Link href="#" className="hover:text-white">Community</Link></li>
-            <li><Link href="#" className="hover:text-white">Contact Us</Link></li>
+            <li><Link href="#help" className="hover:text-white">Help Center</Link></li>
+            <li><Link href="#docs" className="hover:text-white">Documentation</Link></li>
+            <li><Link href="#community" className="hover:text-white">Community</Link></li>
+            <li><Link href="#contact" className="hover:text-white">Contact Us</Link></li>
           </ul>
         </div>
         <div>
           <h4 className="mb-4 text-sm font-medium text-gray-400">Resources</h4>
           <ul className="space-y-2 text-sm">
-            <li><Link href="#" className="hover:text-white">Blog</Link></li>
-            <li><Link href="#" className="hover:text-white">Case Studies</Link></li>
-            <li><Link href="#" className="hover:text-white">Clinical Research</Link></li>
-            <li><Link href="#" className="hover:text-white">Developer API</Link></li>
+            <li><Link href="#blog" className="hover:text-white">Blog</Link></li>
+            <li><Link href="#case" className="hover:text-white">Case Studies</Link></li>
+            <li><Link href="#research" className="hover:text-white">Clinical Research</Link></li>
+            <li><Link href="#api" className="hover:text-white">Developer API</Link></li>
           </ul>
         </div>
         <div>
           <h4 className="mb-4 text-sm font-medium text-gray-400">Company</h4>
           <ul className="space-y-2 text-sm">
-            <li><Link href="#" className="hover:text-white">About Us</Link></li>
-            <li><Link href="#" className="hover:text-white">Careers</Link></li>
-            <li><Link href="#" className="hover:text-white">Partners</Link></li>
-            <li><Link href="#" className="hover:text-white">Security</Link></li>
+            <li><Link href="#about" className="hover:text-white">About Us</Link></li>
+            <li><Link href="#careers" className="hover:text-white">Careers</Link></li>
+            <li><Link href="#partners" className="hover:text-white">Partners</Link></li>
+            <li><Link href="#security" className="hover:text-white">Security</Link></li>
           </ul>
         </div>
       </div>
@@ -107,8 +108,8 @@ export function SiteFooter() {
       <div className="mx-auto mt-10 flex max-w-6xl flex-col items-center justify-between gap-4 px-4 sm:flex-row sm:gap-0">
         <p className="text-xs text-gray-500">© 2025 HairlossDoctor.AI</p>
         <div className="flex items-center gap-6 text-xs text-gray-500">
-          <Link href="#" className="hover:text-white">Privacy Policy</Link>
-          <Link href="#" className="hover:text-white">Terms of Service</Link>
+          <Link href="#privacy" className="hover:text-white">Privacy Policy</Link>
+          <Link href="#terms" className="hover:text-white">Terms of Service</Link>
         </div>
       </div>
     </footer>
