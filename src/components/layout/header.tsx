@@ -1,39 +1,98 @@
 
+'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+import Image from 'next/image'; // Added for next/image
+import { Menu, X } from 'lucide-react';
 
-// Re-using the icon from insta-ai page for consistency
-const AiTrichologistIconHeader = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="hsl(var(--primary))" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 8V4H8"/>
-    <rect x="4" y="4" width="16" height="16" rx="2"/>
-    <path d="M12 12h.01M16 12h.01M8 12h.01M12 16h.01M16 16h.01M8 16h.01"/>
-    <path d="M9 20v-2h6v2"/>
-    <circle cx="9" cy="10" r="0.5" fill="hsl(var(--primary))"/>
-    <circle cx="15" cy="10" r="0.5" fill="hsl(var(--primary))"/>
-    <path d="M12 6.5V9.5M10.5 8H13.5"/>
-  </svg>
-);
-
+// Changed from 'export default function Header()' to 'export function SiteHeader()'
 export function SiteHeader() {
+  const [open, setOpen] = useState(false);
+
+  const nav = [
+    { label: 'Features',   href: '#features' },
+    { label: 'Pricing',    href: '#pricing'  },
+    { label: 'Blog',       href: '#blog'     },
+    { label: 'FAQs',       href: '#faqs'     },
+  ];
+
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-background shadow-sm">
-      <div className="container flex h-16 items-center space-x-4 sm:justify-between sm:space-x-0 max-w-7xl mx-auto px-6 lg:px-8">
-        <Link href="/" className="flex items-center space-x-2">
-          <AiTrichologistIconHeader />
-          <span className="text-xl font-bold text-primary">HairlossDoctor.AI</span>
+    <header className="sticky top-0 z-20 w-full bg-white/70 backdrop-blur border-b border-indigo-50/70 dark:bg-[#070707]/60 dark:border-white/10">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        {/* logo */}
+        <Link href="/" className="flex items-center gap-2 font-semibold text-[#6A4BF6]">
+          {/* Replaced img with Image component and placeholder src */}
+          <Image 
+            src="https://placehold.co/24x24.png" 
+            alt="HairlossDoctor.AI Logo Mark" 
+            width={24} 
+            height={24} 
+            className="h-6 w-6"
+            data-ai-hint="logo brand" 
+          />
+          <span className="hidden sm:inline text-gray-900 dark:text-gray-100">HairlossDoctor.AI</span>
         </Link>
-        <div className="flex flex-1 items-center justify-end space-x-4">
-          <nav className="flex items-center space-x-2">
-            <Button variant="ghost" asChild className="text-muted-foreground hover:text-accent-foreground">
-              <Link href="#">Login</Link>
-            </Button>
-            <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
-              <Link href="#">Sign Up</Link>
-            </Button>
-          </nav>
-        </div>
+
+        {/* desktop nav */}
+        <nav className="hidden md:flex items-center gap-8">
+          {nav.map((n) => (
+            <Link key={n.label}
+              href={n.href}
+              className="text-sm font-medium text-gray-600 hover:text-[#6A4BF6] dark:text-gray-300 dark:hover:text-white">
+              {n.label}
+            </Link>
+          ))}
+
+          <Link href="#login"
+                className="text-sm font-medium text-gray-600 hover:text-[#6A4BF6] dark:text-gray-300 dark:hover:text-white">
+            Login
+          </Link>
+
+          <Link href="#signup">
+            <button className="rounded-xl bg-[#6A4BF6] px-5 py-2 text-sm font-medium text-white transition hover:scale-105 active:scale-95">
+              Sign Up
+            </button>
+          </Link>
+        </nav>
+
+        {/* mobile menu button */}
+        <button
+          onClick={() => setOpen(!open)}
+          className="md:hidden text-gray-700 dark:text-gray-100"
+          aria-label="Toggle menu"
+        >
+          {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+        </button>
       </div>
+
+      {/* mobile drawer */}
+      {open && (
+        <div className="md:hidden bg-white dark:bg-[#070707] border-t border-indigo-50/70 dark:border-white/10">
+          <div className="flex flex-col gap-6 px-6 py-6">
+            {nav.map((n) => (
+              <Link key={n.label}
+                href={n.href}
+                onClick={() => setOpen(false)}
+                className="text-sm font-medium text-gray-700 hover:text-[#6A4BF6] dark:text-gray-300 dark:hover:text-white">
+                {n.label}
+              </Link>
+            ))}
+
+            <Link href="#login"
+                  onClick={() => setOpen(false)}
+                  className="text-sm font-medium text-gray-700 hover:text-[#6A4BF6] dark:text-gray-300 dark:hover:text-white">
+              Login
+            </Link>
+
+            <Link href="#signup" onClick={() => setOpen(false)}>
+              <button className="w-full rounded-xl bg-[#6A4BF6] px-5 py-3 text-sm font-medium text-white transition hover:scale-105 active:scale-95">
+                Sign Up
+              </button>
+            </Link>
+          </div>
+        </div>
+      )}
     </header>
   );
 }
