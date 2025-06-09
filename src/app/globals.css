@@ -134,3 +134,21 @@
 .chat-scroll-area::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--foreground));
 }
+
+/* Specific styles for AI bubbles */
+.ai-bubble ul {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.ai-bubble li {
+  margin-left: 0;
+  position: relative;
+}
+
+.ai-bubble li::before {
+  content: '•';
+  color: #fff; /* Adjust color as needed for contrast */
+  position: absolute;
+  left: -1.1rem; /* Adjust position as needed */
+}

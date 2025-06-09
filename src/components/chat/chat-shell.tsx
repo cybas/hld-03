@@ -106,3 +106,4 @@ export const ChatShell: FC<ChatShellProps> = ({ userType, initialGreeting }) => 
     </section>
   );
 };
+export default ChatShell;
