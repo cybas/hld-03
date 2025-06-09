@@ -23,7 +23,15 @@ const hexToRgba = (hex: string, alpha: number): string => {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
 
-const featureChipsData = [
+interface FeatureChipData {
+  name: string;
+  IconComponent: React.ElementType;
+  color: string;
+  action: string;
+  isLink?: boolean;
+}
+
+const featureChipsData: FeatureChipData[] = [
   { name: 'Treatment Plans', IconComponent: Pill, color: '#F6A34B', action: "Tell me about treatment plans" },
   { name: 'Product Finder', IconComponent: ShoppingBag, color: '#F56C6C', action: "Help me find hair products" },
   { name: 'Book Consultation', IconComponent: CalendarDays, color: '#F6C14B', action: "/assessment/step1", isLink: true },
@@ -63,30 +71,33 @@ export default function HairLossLanding() {
 
   const selectRole = (role: string) => setUserType(role);
 
-  const startChatting = () => { // Renamed from startAssessment to startChatting
+  const startChatting = () => { 
     if (!userType || chatStarted) return;
     setChatStarted(true);
     setHistory([{ who: 'ai', text: greet[userType as string] }]);
   };
+  
+  const sendRawMessage = (messageText: string, typeOfUser: string | null) => {
+     return fetch('/api/general-chat', {
+        method : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body   : JSON.stringify({ message: messageText, userType: typeOfUser })
+      });
+  };
 
   const send = async () => {
-    if (!draft.trim() || !userType) return; // Ensure userType is selected
+    if (!draft.trim() || !userType) return; 
     const msg = draft.trim();
     setHistory((h) => [...h, { who: 'user', text: msg }]);
     setDraft('');
 
     try {
-      const r = await fetch('/api/general-chat', {
-        method : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body   : JSON.stringify({ message: msg, userType })
-      });
+      const r = await sendRawMessage(msg, userType);
       const { response } = await r.json();
-      // Basic formatting for AI response
       const formattedResponse = response
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // **bold** to <strong>
-        .replace(/^- /gm, '• ') // Convert dash lists to bullet points
-        .replace(/\n/g, '<br>'); // Newlines to <br>
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') 
+        .replace(/^- /gm, '• ') 
+        .replace(/\n/g, '<br>'); 
       setHistory((h) => [...h, { who: 'ai', text: formattedResponse }]);
     } catch {
       setHistory((h) => [...h, { who: 'ai', text: 'Sorry, something went wrong.' }]);
@@ -99,17 +110,15 @@ export default function HairLossLanding() {
       return;
     }
     if (!chatStarted) {
-      setChatStarted(true); // Start the chat if not already started
-      setHistory([{ who: 'ai', text: greet[userType as string] }]); // Start chat with greeting
+      startChatting(); // Start the chat if not already started, this will also set the initial AI greeting
     }
 
+    // Add user's action text to history immediately IF chat is already started or just started by this action
+    // The greeting from startChatting will be the first AI message if chat wasn't started
     setHistory((h) => [...h, { who: 'user', text: actionText }]);
+    
     try {
-      const r = await fetch('/api/general-chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: actionText, userType })
-      });
+      const r = await sendRawMessage(actionText, userType);
       const { response } = await r.json();
       const formattedResponse = response
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
@@ -124,6 +133,7 @@ export default function HairLossLanding() {
       ]);
     }
   };
+
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -173,7 +183,7 @@ export default function HairLossLanding() {
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && send()}
-              disabled={!chatStarted && !userType} // Disable if chat not started OR no user type yet
+              disabled={!chatStarted && !userType} 
             />
             <button
               onClick={send}
@@ -185,23 +195,21 @@ export default function HairLossLanding() {
             </button>
           </div>
         </div>
-
-        {/* Primary CTA – goes live once a role is picked */}
+        
+        {/* CTA and Role selection (only if chat hasn't started) */}
         {!chatStarted && (
+          <>
             <button
-            onClick={startChatting} // Changed from startAssessment to startChatting
+            onClick={startChatting} 
             disabled={!userType}
             className={`mt-8 px-8 py-3 rounded-xl font-semibold transition-all duration-150 ease-out
                         hover:scale-105
                         ${userType ? 'bg-indigo-600 text-white hover:bg-indigo-700'
                                     : 'bg-indigo-200 text-indigo-500 cursor-not-allowed opacity-70'}`}
             >
-            Start Chatting with AI {/* Changed text */}
+            Start Chatting with AI
             </button>
-        )}
 
-        {/* Role-selection row */}
-        {!chatStarted && (
             <div className="mt-6 flex flex-wrap justify-center gap-3 sm:gap-4">
             <button
                 onClick={() => selectRole('doctor')}
@@ -230,67 +238,67 @@ export default function HairLossLanding() {
                 👤 Other
             </button>
             </div>
-        )}
-        
-        {/* Feature chips grid (visible only if chat hasn't started) */}
-        {!chatStarted && (
-          <div className="mt-10 w-full max-w-3xl">
-            <div className="sm:grid sm:grid-cols-[repeat(auto-fit,minmax(170px,1fr))] sm:gap-3 md:gap-4 
-                            block space-y-3 sm:space-y-0 
-                            sm:max-h-none max-h-[200px] overflow-y-auto sm:overflow-visible no-scrollbar">
-              {featureChipsData.map((chip) => {
-                const chipStyle = {
-                  borderColor: chip.color,
-                  color: chip.color, 
-                  backgroundColor: hexToRgba(chip.color, 0.04),
-                };
-                const textStyle = { color: '#4B5563' }; // slate-700 for text
-                const hoverStyle = {
-                   backgroundColor: hexToRgba(chip.color, 0.1),
-                };
-                const ChipContent = () => (
-                  <>
-                    <chip.IconComponent className="w-5 h-5 mr-1.5 sm:mr-2 flex-shrink-0" style={{ color: chip.color }} />
-                    <span className="font-medium text-xs sm:text-sm opacity-90" style={textStyle}>{chip.name}</span>
-                  </>
-                );
+            
+            {/* Feature chips grid (visible only if chat hasn't started) */}
+            <div className="mt-10 w-full max-w-3xl">
+                <div className="sm:grid sm:grid-cols-[repeat(auto-fit,minmax(170px,1fr))] sm:gap-3 md:gap-4 
+                                block space-y-3 sm:space-y-0 
+                                sm:max-h-none max-h-[200px] overflow-y-auto sm:overflow-visible no-scrollbar">
+                {featureChipsData.map((chip) => {
+                    const chipStyle = {
+                    borderColor: chip.color,
+                    color: chip.color, 
+                    backgroundColor: hexToRgba(chip.color, 0.04),
+                    };
+                    const textStyle = { color: '#4B5563' }; // slate-700 for text
+                    const hoverStyle = {
+                    backgroundColor: hexToRgba(chip.color, 0.1),
+                    };
+                    const ChipContent = () => (
+                    <>
+                        <chip.IconComponent className="w-5 h-5 mr-1.5 sm:mr-2 flex-shrink-0" style={{ color: chip.color }} />
+                        <span className="font-medium text-xs sm:text-sm leading-tight opacity-90" style={textStyle}>{chip.name}</span>
+                    </>
+                    );
 
-                const chipClasses = "flex items-center justify-center h-11 px-3 rounded-full border transition-all duration-150 ease-out hover:scale-105 cursor-pointer w-full sm:w-auto text-left";
-                
-                if (chip.isLink) {
-                  return (
-                    <Link href={chip.action} key={chip.name} legacyBehavior>
-                      <a 
+                    const chipClasses = "flex items-center justify-center h-11 px-3 rounded-full border transition-all duration-150 ease-out hover:scale-105 cursor-pointer w-full sm:w-auto";
+                    
+                    if (chip.isLink) {
+                    return (
+                        <Link href={chip.action} key={chip.name} legacyBehavior>
+                        <a 
+                            className={chipClasses}
+                            style={chipStyle}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = hoverStyle.backgroundColor}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = chipStyle.backgroundColor}
+                        >
+                            <ChipContent />
+                        </a>
+                        </Link>
+                    );
+                    }
+                    return (
+                    <div 
+                        key={chip.name}
+                        onClick={() => sendQuickAction(chip.action)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && sendQuickAction(chip.action)}
                         className={chipClasses}
                         style={chipStyle}
                         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = hoverStyle.backgroundColor}
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = chipStyle.backgroundColor}
-                      >
+                    >
                         <ChipContent />
-                      </a>
-                    </Link>
-                  );
-                }
-                return (
-                  <div 
-                    key={chip.name}
-                    onClick={() => sendQuickAction(chip.action)}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && sendQuickAction(chip.action)}
-                    className={chipClasses}
-                    style={chipStyle}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = hoverStyle.backgroundColor}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = chipStyle.backgroundColor}
-                  >
-                    <ChipContent />
-                  </div>
-                );
-              })}
+                    </div>
+                    );
+                })}
+                </div>
             </div>
-          </div>
+          </>
         )}
       </main>
     </div>
   );
 }
+
