@@ -1,83 +1,84 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { BedrockAgentRuntimeClient, InvokeAgentCommand } from '@aws-sdk/client-bedrock-agent-runtime';
-
 export async function POST(request: NextRequest) {
+  const overallStart = Date.now();
+  
   try {
+    const parseStart = Date.now();
     const { message, context } = await request.json();
-
-    console.log('🔍 Received message:', message);
-    console.log('🔍 Received context:', JSON.stringify(context, null, 2));
-
-    // Initialize Bedrock Agent client
+    console.log(`⏱️ JSON Parse: ${Date.now() - parseStart}ms`);
+    
+    const configStart = Date.now();
+    const config = getBedrockConfig();
+    console.log(`⏱️ Config Setup: ${Date.now() - configStart}ms`);
+    
+    const clientStart = Date.now();
     const client = new BedrockAgentRuntimeClient({
-      region: 'us-east-1',
+      region: config.region,
       credentials: {
         accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
       }
     });
+    console.log(`⏱️ Client Init: ${Date.now() - clientStart}ms`);
 
-    // Enhanced prompt with full context
+    // Shorter, more efficient prompt
+    const promptStart = Date.now();
     const enhancedPrompt = `
-USER CONTEXT:
-- Current Step: ${context?.currentStep || 'General Chat'}
-- Selected Images: ${JSON.stringify(context?.selectedImages || [])}
-- Selected Tags: ${JSON.stringify(context?.selectedTags || [])}
-- Assessment Results: ${JSON.stringify(context?.assessmentResults || {})}
-- User Preferences: ${JSON.stringify(context?.preferences || {})}
+USER CONTEXT: Step ${context.currentStep || 1}, Images: ${context.selectedImages?.length || 0}, Factors: ${context.selectedTags?.length || 0}
 
 USER MESSAGE: ${message}
 
-Please provide a helpful, professional response based on the user's hair loss assessment context and your medical knowledge base. Reference their specific selections and provide personalized advice.
+Provide a brief, helpful response (max 100 words). Reference their specific selections when relevant.
     `;
+    console.log(`⏱️ Prompt Creation: ${Date.now() - promptStart}ms`);
 
-    console.log('🔍 Enhanced prompt being sent to AWS:', enhancedPrompt);
-
-    // Send to Bedrock Agent
+    const commandStart = Date.now();
     const command = new InvokeAgentCommand({
-      agentId: process.env.BEDROCK_AGENT_ID!,
-      agentAliasId: process.env.BEDROCK_AGENT_ALIAS_ID!,
-      sessionId: `session-${Date.now()}`,
+      agentId: config.agentId,
+      agentAliasId: config.agentAliasId,
+      sessionId: config.sessionId,
       inputText: enhancedPrompt,
       performanceConfig: { latency: "optimized" },
       enableTrace: false
     });
+    console.log(`⏱️ Command Setup: ${Date.now() - commandStart}ms`);
 
-    const startTime = Date.now();
+    const awsCallStart = Date.now();
     const response = await client.send(command);
+    console.log(`🚀 AWS Bedrock Call: ${Date.now() - awsCallStart}ms`);
 
-    // Process streaming response with performance tracking
+    const processingStart = Date.now();
     let fullResponse = '';
-    let firstChunk = true;
-
+    let chunkCount = 0;
+    
     if (response.completion) {
       for await (const chunk of response.completion) {
         if (chunk.chunk?.bytes) {
           const text = new TextDecoder().decode(chunk.chunk.bytes);
           fullResponse += text;
-
-          // Track first chunk for performance
-          if (firstChunk && text.length > 50) {
-            console.log(`First chunk received in: ${Date.now() - startTime}ms`);
-            firstChunk = false;
-          }
+          chunkCount++;
         }
       }
     }
+    console.log(`⏱️ Response Processing: ${Date.now() - processingStart}ms (${chunkCount} chunks)`);
 
-        }
+    const totalTime = Date.now() - overallStart;
+    console.log(`🎯 TOTAL REQUEST TIME: ${totalTime}ms`);
+    
+    // Alert if any part is slow
+    if (totalTime > 3000) console.warn('🐌 SLOW REQUEST DETECTED');
+    if (Date.now() - awsCallStart > 2000) console.warn('🐌 AWS CALL IS SLOW');
+
+    return NextResponse.json({ 
+      response: fullResponse,
+      debugTiming: {
+        total: totalTime,
+        awsCall: Date.now() - awsCallStart,
+        chunks: chunkCount
       }
-    }
-
-    console.log('🔍 Raw AWS response:', fullResponse);
-
-    return NextResponse.json({ response: fullResponse });
-
+    });
+    
   } catch (error) {
     console.error('❌ Bedrock Agent error:', error);
-    return NextResponse.json(
-      { error: 'Failed to get AI response' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to get AI response' }, { status: 500 });
   }
 }

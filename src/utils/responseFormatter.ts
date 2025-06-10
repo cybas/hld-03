@@ -1,51 +1,59 @@
-
 export const formatAIResponse = (text: string): string => {
-  if (!text) return ''; // Handle null or undefined input
+  if (!text) return '';
 
   let formattedText = text;
 
-  // Remove excessive asterisks and clean up formatting
-  // Keep valid **bold** formatting, remove stray single asterisks if they are not part of a list item
-  formattedText = formattedText.replace(/\*([^* \n](?:[^*]*[^* \n])?)\*/g, '$1'); // Remove single asterisks used for emphasis if not list items
+  // Remove excessive asterisks but preserve **bold** formatting
+  formattedText = formattedText.replace(/\*\*\*/g, '**'); // Triple asterisks to double
 
-  // Format section headers like **Header:** by ensuring newlines around them
-  // This regex looks for **Text:** and adds newlines if not already present effectively
-  formattedText = formattedText.replace(/\s*\*\*([^:]+):\*\*\s*/g, '\n\n**$1:**\n');
+  // Convert **bold** to HTML <strong> tags (better than <b> for semantics)
+  formattedText = formattedText.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
 
-  // Convert dash lists and asterisk lists to bullet points (•)
-  // Handle lists that might or might not have a space after the dash/asterisk
-  formattedText = formattedText.replace(/^[ \t]*-\s?/gm, '• ');
-  formattedText = formattedText.replace(/\n[ \t]*-\s?/gm, '\n• ');
-  formattedText = formattedText.replace(/^[ \t]*\*\s?/gm, '• '); // For asterisk list items
-  formattedText = formattedText.replace(/\n[ \t]*\*\s?/gm, '\n• '); // For asterisk list items
+  // Remove any remaining single asterisks
+  formattedText = formattedText.replace(/(?<!\*)\*(?!\*)/g, '');
+
+  // Format section headers with proper spacing (they're now <strong> tags)
+  formattedText = formattedText.replace(/<strong>([^:]+):<\/strong>/g, '\n\n<strong>$1:</strong>\n');
+
+  // SMART BULLET POINT CONVERSION - Only convert when it's actually a list
+  const lines = formattedText.split('\n');
+  const processedLines: string[] = [];
   
-  // Ensure proper line breaks before section headers that might follow a sentence.
-  formattedText = formattedText.replace(/([.!?])\s*(\*\*[^:]+:\*\*)/g, '$1\n\n$2');
+  for (let i = 0; i < lines.length; i++) {
+    const currentLine = lines[i].trim();
+    const nextLine = i + 1 < lines.length ? lines[i + 1].trim() : '';
+    const prevLine = i > 0 ? lines[i - 1].trim() : '';
+    
+    // Check if this looks like a real list item
+    if (currentLine.match(/^[-*]\s+/)) {
+      // Only convert to bullet if it's a real list
+      const isRealList = 
+        nextLine.match(/^[-*]\s+/) || 
+        prevLine.match(/^[-*]\s+/) || 
+        prevLine.endsWith(':') ||
+        prevLine.includes('<strong>') && prevLine.endsWith('</strong>');
+        
+      if (isRealList) {
+        processedLines.push(currentLine.replace(/^[-*]\s*/, '• '));
+      } else {
+        // Not a real list, remove the dash/asterisk
+        processedLines.push(currentLine.replace(/^[-*]\s*/, ''));
+      }
+    } else {
+      processedLines.push(lines[i]);
+    }
+  }
+  
+  formattedText = processedLines.join('\n');
 
-  // Clean up multiple line breaks
+  // Handle numbered lists properly
+  formattedText = formattedText.replace(/^(\d+\.)\s+/gm, '\n$1 ');
+
+  // Clean up spacing
   formattedText = formattedText.replace(/\n{3,}/g, '\n\n');
+  formattedText = formattedText.replace(/^\n+/, '');
+  formattedText = formattedText.replace(/\n+$/, '');
+  formattedText = formattedText.replace(/ {2,}/g, ' ');
 
-  // Remove leading/trailing spaces on each line, then trim the whole string
-  formattedText = formattedText.split('\n').map(line => line.trim()).join('\n').trim();
-  
-  // Normalize multiple spaces within lines to a single space (but not spaces at the start of a line for bullets)
-  formattedText = formattedText.replace(/ (?= )/g, '');
-
-
-  // Specific rule provided in prompt: .replace(/\+\+([^+]+)\+\+/g, '\n• **$1**')
-  // This seems to be for a custom "++highlighted bullet++" syntax.
-  formattedText = formattedText.replace(/\+\+([^+]+)\+\+/g, '\n• **$1**');
-
-  // Specific rule provided: .replace(/(\d+\.\s)/g, '\n$1') - Ensure newline before numbered list items
-  // This helps separate numbered list items onto new lines if they aren't already.
-  formattedText = formattedText.replace(/(\d+\.\s)/g, '\n$1');
-  
-  // Specific rule provided: .replace(/([•·])/g, '\n$1') - Ensure newline before bullet characters if they are run-on
-  // This helps separate bullet points onto new lines if they aren't already.
-  formattedText = formattedText.replace(/([•·])/g, '\n$1');
-
-  // Re-trim and clean multiple newlines after specific list formatting rules
-  formattedText = formattedText.replace(/\n{3,}/g, '\n\n').trim();
-
-  return formattedText;
+  return formattedText.trim();
 };

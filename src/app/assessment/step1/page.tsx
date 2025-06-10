@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import type { Message, HairLossImage, AssessmentData } from '@/types';
 import { ArrowLeft, SendHorizontal, MessageSquare } from 'lucide-react';
 import { formatAIResponse } from '@/utils/responseFormatter';
+import useChatScroll from '@/hooks/use-chat-scroll';
 
 // Image Data
 const malePatternImages: HairLossImage[] = [
@@ -254,8 +255,10 @@ export default function AssessmentStep1Page() {
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [isChatLoading, setIsChatLoading] = useState(false);
+  const chatViewportRef = useChatScroll(chatMessages);
 
   useEffect(() => {
+    document.title = 'HairlossDoctor.AI Visual Assessment - Step 1/5';
     const storedAssessmentDataString = sessionStorage.getItem('assessmentData');
     if (storedAssessmentDataString) {
       try {
@@ -362,14 +365,14 @@ export default function AssessmentStep1Page() {
   return (
     <>
       <div className="container mx-auto px-4 py-8 pb-28">
-        <div className="flex items-center justify-between mb-4">
-          <Link href="/" className="flex items-center text-primary hover:underline">
-            <ArrowLeft className="mr-2 h-5 w-5" />
-            Back to Home
-          </Link>
-          <span className="text-sm font-medium text-muted-foreground">Step 1 of 4</span>
+        <div className="flex items-center justify-between mb-4 text-sm text-muted-foreground">
+          <div>
+            <Link href="/" className="text-primary hover:underline">Home</Link>
+            <span className="mx-2">/</span>
+            <span>Step 1 of 5</span>
+          </div>
         </div>
-        <Progress value={25} className="w-full mb-6" />
+        <Progress value={20} className="w-full mb-6" />
 
         <div className="mb-8 text-center">
           <h1 className="text-2xl font-semibold mb-2 text-foreground">Step 1: Select Images That Match Your Hair Loss Pattern</h1>
@@ -380,15 +383,17 @@ export default function AssessmentStep1Page() {
           {imageSections.map(section => (
             <div key={section.title}>
               <h2 className="text-xl font-semibold mb-4 border-b pb-2 text-foreground">{section.title}</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                 {section.images.map(image => (
                   <div
                     key={image.id}
                     onClick={() => toggleImageSelection(image)}
                     className={`cursor-pointer rounded-lg overflow-hidden border-2 transition-all duration-200 ease-in-out group
-                      ${selectedImages.some(selImg => selImg.id === image.id) ? 'border-primary ring-2 ring-primary shadow-lg' : 'border-transparent hover:border-primary/50 hover:shadow-md'}`}
+                      ${selectedImages.some(selImg => selImg.id === image.id) 
+                        ? 'border-primary ring-1 ring-offset-1 ring-primary shadow-md' 
+                        : 'border-transparent hover:border-primary/50 hover:shadow-md'}`}
                   >
-                    <div className="relative w-full aspect-[3/4] bg-muted overflow-hidden rounded-t-md">
+                    <div className="relative w-full aspect-[4/5] bg-muted overflow-hidden rounded-t-md">
                       <Image
                         src={image.url}
                         alt={image.description}
@@ -397,7 +402,9 @@ export default function AssessmentStep1Page() {
                         className="group-hover:scale-105 transition-transform duration-300"
                       />
                     </div>
-                    <p className="p-2 text-xs text-center bg-card text-card-foreground rounded-b-md">{image.description}</p>
+                    <p className={`p-2 text-xs text-center rounded-b-md ${selectedImages.some(selImg => selImg.id === image.id) ? 'bg-primary/10 text-primary font-medium' : 'bg-card text-card-foreground'}`}>
+                      {image.description}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -408,29 +415,29 @@ export default function AssessmentStep1Page() {
         <div className="bg-card p-4 md:p-6 rounded-xl shadow-xl mb-8">
           <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center">
             <MessageSquare className="mr-2 h-6 w-6 text-primary"/>
-            Chat About Your Image Selections
+            Chat with AI About Your Selections
           </h3>
-          <ScrollArea className="h-60 mb-4 border rounded-lg p-3 bg-background chat-scroll-area">
+          <ScrollArea viewportRef={chatViewportRef} className="h-60 mb-4 border rounded-lg p-3 bg-background chat-scroll-area">
             {chatMessages.length === 0 && !isChatLoading && (
               <div className="flex flex-col items-center justify-center h-full">
                 <MessageSquare className="w-12 h-12 text-muted-foreground/50 mb-2" />
-                <p className="text-sm text-muted-foreground text-center">
-                  Select images above and then ask questions here.
+                <p className="text-sm text-muted-foreground text-center px-4">
+                  Select images above, then chat with our AI for insights or click "Next".
                 </p>
               </div>
             )}
             {chatMessages.map(msg => (
-              <div key={msg.id} className="mb-2 last:mb-0">
-                <div className={`p-2.5 rounded-xl text-sm w-fit max-w-[80%]
+              <div key={msg.id} className="mb-3 last:mb-0">
+                <div className={`p-3 rounded-xl text-sm w-fit max-w-[85%] shadow-sm
                   ${msg.sender === 'user' 
-                    ? 'bg-primary text-primary-foreground rounded-tr-sm ml-auto' 
-                    : 'bg-muted text-foreground rounded-tl-sm mr-auto'}`}>
-                  <p className="font-semibold mb-0.5">{msg.sender === 'user' ? 'You' : 'AI Assistant'}</p>
+                    ? 'bg-primary text-primary-foreground rounded-t-xl rounded-bl-xl ml-auto' 
+                    : 'bg-muted text-foreground rounded-t-xl rounded-br-xl mr-auto border border-border'}`}>
+                  <p className="font-semibold mb-1">{msg.sender === 'user' ? 'You' : 'AI Assistant'}</p>
                   {msg.sender === 'user' 
                     ? <p className="whitespace-pre-wrap">{msg.text}</p>
                     : <p className="whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: msg.text }}></p>
                   }
-                  <span className="text-xs text-primary-foreground mt-1 block text-right">
+                  <span className={`text-xs mt-1.5 block text-right ${msg.sender === 'user' ? 'text-primary-foreground/70' : 'text-muted-foreground/80'}`}>
                     {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
@@ -450,16 +457,16 @@ export default function AssessmentStep1Page() {
               type="text"
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
-              placeholder="Ask about your selected patterns..."
+              placeholder="Ask AI about your selections or next steps..."
               onKeyPress={(e) => e.key === 'Enter' && !isChatLoading && handleChatSend()}
-              className="flex-grow bg-muted border-transparent rounded-full px-4 py-2.5 text-sm placeholder:text-muted-foreground/80 focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="flex-grow bg-muted border-border rounded-lg px-4 py-2.5 text-sm placeholder:text-muted-foreground/80 focus:ring-2 focus:ring-primary focus:border-primary"
               disabled={isChatLoading}
             />
             <Button 
               onClick={handleChatSend} 
               disabled={isChatLoading || !chatInput.trim()} 
               size="icon"
-              className="bg-primary text-primary-foreground rounded-full p-2.5 w-10 h-10 hover:bg-primary/90 active:scale-95 transition-transform flex-shrink-0"
+              className="bg-primary text-primary-foreground rounded-lg p-2.5 w-10 h-10 hover:bg-primary/90 active:scale-95 transition-transform flex-shrink-0"
               aria-label="Send message"
             >
               <SendHorizontal className="h-5 w-5" />
@@ -476,13 +483,14 @@ export default function AssessmentStep1Page() {
               disabled={selectedImages.length === 0}
               asChild
             >
-              <Link href="/assessment/step2">Next Step</Link>
+              <Link href="/assessment/step2">Next: Select Factors</Link>
             </Button>
-            {selectedImages.length === 0 && <p className="text-sm text-muted-foreground mt-2">Please select at least one image to proceed.</p>}
+            {selectedImages.length === 0 && <p className="text-sm text-muted-foreground mt-2">Please select at least one image that best matches your condition.</p>}
           </div>
         </div>
       </div>
     </>
   );
 }
+
     
