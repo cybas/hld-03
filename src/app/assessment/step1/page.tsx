@@ -338,11 +338,37 @@ export default function AssessmentStep1Page() {
         };
         setChatMessages(prev => [...prev, aiMessage]);
       } else {
-        const errorData = await response.text();
-        console.error('API Error response:', errorData);
+        const errorStatus = response.status;
+        let errorTextForLog = "";
+        try {
+          errorTextForLog = await response.text(); // Read the body ONCE
+        } catch (e) {
+          console.error("Failed to read error response body:", e);
+        }
+
+        let errorToDisplay = `Sorry, I had trouble processing that (status: ${errorStatus}). Please try again.`;
+        
+        if (errorTextForLog) {
+          try {
+            const errorJson = JSON.parse(errorTextForLog);
+            if (errorJson && errorJson.error) {
+              console.error('API Error response (parsed):', errorJson.error, 'Status:', errorStatus);
+              // Optionally refine errorToDisplay based on errorJson.error if it's user-friendly
+              // errorToDisplay = `Sorry, an error occurred: ${errorJson.error} (Status: ${errorStatus}).`;
+            } else {
+              console.error('API Error response (text):', errorTextForLog, 'Status:', errorStatus);
+            }
+          } catch (e) {
+            // Not JSON, just log the text
+            console.error('API Error response (text):', errorTextForLog, 'Status:', errorStatus);
+          }
+        } else {
+          console.error('API Error response: Empty body.', 'Status:', errorStatus);
+        }
+
         const aiMessage: Message = {
           id: `${Date.now()}-error`,
-          text: 'Sorry, I had trouble processing that. Please try again.',
+          text: errorToDisplay,
           sender: 'ai',
           timestamp: new Date(),
         };
@@ -350,9 +376,13 @@ export default function AssessmentStep1Page() {
       }
     } catch (error) {
       console.error('Chat fetch error:', error);
+      let errorMessageText = 'Sorry, an error occurred while sending your message. Please try again.';
+      if (error instanceof Error && error.name === 'AbortError') {
+        errorMessageText = 'The request took too long. Please try a shorter question or check your connection.';
+      }
       const aiMessage: Message = {
         id: `${Date.now()}-catch-error`,
-        text: 'Sorry, an error occurred. Please try again.',
+        text: errorMessageText,
         sender: 'ai',
         timestamp: new Date(),
       };
@@ -492,5 +522,7 @@ export default function AssessmentStep1Page() {
     </>
   );
 }
+
+    
 
     
