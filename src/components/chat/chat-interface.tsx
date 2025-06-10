@@ -13,6 +13,18 @@ import { ArrowLeft, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatAIResponse } from '@/utils/responseFormatter';
 
+// Add response caching system for general chat
+const generalResponseCache = new Map();
+
+const getGeneralCacheKey = (message: string, context: any) => {
+  return btoa(JSON.stringify({ 
+    message: message.toLowerCase().trim(), 
+    imageCount: context.selectedImages?.length || 0,
+    tagCount: context.selectedTags?.length || 0,
+    step: context.currentStep || 'chat'
+  }));
+};
+
 // SVG Icons for Action Cards
 const MicroscopeIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-8 w-8 mb-3 text-primary transition-transform duration-300 group-hover:scale-110">
@@ -145,6 +157,24 @@ export function ChatInterface({ displayMode = 'page', onClose, messages, setMess
 
     try {
       const context = prepareAgentContext();
+      
+      // Check cache first
+      const cacheKey = getGeneralCacheKey(text, context);
+      const cachedResponse = generalResponseCache.get(cacheKey);
+      
+      if (cachedResponse) {
+        const cleanResponse = formatAIResponse(cachedResponse);
+        const aiMessage: Message = { 
+          id: `${Date.now()}-ai-cached`, 
+          text: cleanResponse, 
+          sender: 'ai', 
+          timestamp: new Date() 
+        };
+        setMessages((prevMessages) => [...prevMessages, aiMessage]);
+        setIsLoading(false);
+        setTimeout(() => inputRef.current?.focus(), 0);
+        return;
+      }
       console.log('📤 Sending to API:', { message: text, context });
       
       const response = await fetch('/api/bedrock-chat', {
@@ -152,13 +182,17 @@ export function ChatInterface({ displayMode = 'page', onClose, messages, setMess
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           message: text,  // Send the actual message text
-          context: context  // Send the full context object
+          context: context,  // Send the full context object
+          signal: controller.signal
         }), 
       });
 
       if (response.ok) {
         const data = await response.json();
         console.log('📥 Received from API:', data);
+        
+        // Cache the response
+        generalResponseCache.set(cacheKey, data.response);
         
         const cleanResponse = formatAIResponse(data.response);
         const aiMessage: Message = { 
@@ -173,7 +207,11 @@ export function ChatInterface({ displayMode = 'page', onClose, messages, setMess
       }
     } catch (error) {
       console.error('Chat error:', error);
-      const fallbackResponse = getPlaceholderResponse(text);
+      
+      let fallbackResponse = getPlaceholderResponse(text);
+      if (error.name === 'AbortError') {
+        fallbackResponse = 'Response took too long. Please try a shorter question.';
+      }
       const cleanFallbackResponse = formatAIResponse(fallbackResponse);
       const aiMessage: Message = { 
         id: `${Date.now()}-fallback`, 

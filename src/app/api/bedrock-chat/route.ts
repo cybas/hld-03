@@ -38,18 +38,33 @@ Please provide a helpful, professional response based on the user's hair loss as
       agentId: process.env.BEDROCK_AGENT_ID!,
       agentAliasId: process.env.BEDROCK_AGENT_ALIAS_ID!,
       sessionId: `session-${Date.now()}`,
-      inputText: enhancedPrompt
+      inputText: enhancedPrompt,
+      performanceConfig: { latency: "optimized" },
+      enableTrace: false
     });
 
+    const startTime = Date.now();
     const response = await client.send(command);
 
-    // Process streaming response
+    // Process streaming response with performance tracking
     let fullResponse = '';
+    let firstChunk = true;
+
     if (response.completion) {
       for await (const chunk of response.completion) {
         if (chunk.chunk?.bytes) {
           const text = new TextDecoder().decode(chunk.chunk.bytes);
           fullResponse += text;
+
+          // Track first chunk for performance
+          if (firstChunk && text.length > 50) {
+            console.log(`First chunk received in: ${Date.now() - startTime}ms`);
+            firstChunk = false;
+          }
+        }
+      }
+    }
+
         }
       }
     }

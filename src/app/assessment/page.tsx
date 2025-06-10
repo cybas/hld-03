@@ -11,6 +11,18 @@ import type { Message, HairLossImage, AssessmentData } from '@/types';
 import { ArrowLeft, SendHorizontal, MessageSquare } from 'lucide-react';
 
 // Image Data
+
+// Add response caching system for assessment chat
+const assessmentResponseCache = new Map();
+
+const getAssessmentCacheKey = (message: string, context: any) => {
+  return btoa(JSON.stringify({
+    message: message.toLowerCase().trim(),
+    imageCount: context.selectedImages?.length || 0,
+    step: context.currentStep || 1
+  }));
+};
+
 const malePatternImages: HairLossImage[] = [
   {
     id: 'aga-male-1-2',
@@ -314,17 +326,37 @@ export default function AssessmentPage() {
     };
     setChatMessages(prev => [...prev, userMessage]);
     setChatInput('');
-    setIsChatLoading(true);
 
     const context = getChatContext();
+
+    // Check cache first
+    const cacheKey = getAssessmentCacheKey(userMessage.text, context);
+    const cachedResponse = assessmentResponseCache.get(cacheKey);
+
+    if (cachedResponse) {
+      const aiMessage: Message = {
+        id: `${Date.now()}-ai-cached`,
+        text: cachedResponse,
+        sender: 'ai',
+        timestamp: new Date(),
+      };
+      setChatMessages(prev => [...prev, aiMessage]);
+      return; // Exit early if cached response is found
+    }
+
+    setIsChatLoading(true);
+
+    // Add timeout controller
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
 
     try {
       const response = await fetch('/api/bedrock-chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: userMessage.text, context }),
+        signal: controller.signal // Associate the controller's signal with the fetch request
       });
-
       if (response.ok) {
         const data = await response.json();
         const aiMessage: Message = {
@@ -333,6 +365,9 @@ export default function AssessmentPage() {
           sender: 'ai',
           timestamp: new Date(),
         };
+
+        // Cache the response
+        assessmentResponseCache.set(cacheKey, data.response);
         setChatMessages(prev => [...prev, aiMessage]);
       } else {
         const errorData = await response.text();
@@ -346,8 +381,14 @@ export default function AssessmentPage() {
         setChatMessages(prev => [...prev, aiMessage]);
       }
     } catch (error) {
+      clearTimeout(timeoutId); // Clear the timeout if the fetch completes
       console.error('Chat fetch error:', error);
-      const aiMessage: Message = {
+
+      let errorMessage = 'Sorry, an error occurred. Please try again.';
+      if (error.name === 'AbortError') {
+        errorMessage = 'Response took too long. Please try a shorter question.';
+      }
+       const aiMessage: Message = {
         id: `${Date.now()}-catch-error`,
         text: 'Sorry, an error occurred. Please try again.',
         sender: 'ai',
