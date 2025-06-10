@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -16,12 +17,10 @@ import { formatAIResponse } from '@/utils/responseFormatter';
 // Add response caching system for general chat
 const generalResponseCache = new Map();
 
-const getGeneralCacheKey = (message: string, context: any) => {
+const getGeneralCacheKey = (message: string) => {
   return btoa(JSON.stringify({ 
     message: message.toLowerCase().trim(), 
-    imageCount: context.selectedImages?.length || 0,
-    tagCount: context.selectedTags?.length || 0,
-    step: context.currentStep || 'chat'
+    userType: 'patient' // userType is fixed for this interface's use
   }));
 };
 
@@ -124,22 +123,6 @@ export function ChatInterface({ displayMode = 'page', onClose, messages, setMess
     return "I'm here to help with hair loss questions. Could you tell me more about what you'd like to know? Please remember, this information is for educational purposes. Consider discussing with your healthcare provider or a dermatologist for personalized medical advice and diagnosis.";
   };
 
-  const prepareAgentContext = () => {
-    // Try to get assessment data from session storage
-    const assessmentData = typeof window !== 'undefined' 
-      ? JSON.parse(sessionStorage.getItem('hairLossAssessment') || '{}')
-      : {};
-      
-    return {
-      currentStep: assessmentData.currentStep || 'chat',
-      selectedImages: assessmentData.selectedImages || [],
-      selectedTags: assessmentData.selectedTags || [],
-      assessmentResults: assessmentData.results || {},
-      preferences: assessmentData.preferences || {},
-      chatHistory: assessmentData.chatHistory || []
-    };
-  };
-
   const handleSendMessage = async (text: string) => {
     if (text.trim() === 'Start hair loss assessment') {
         window.location.href = '/assessment/step1';
@@ -156,10 +139,7 @@ export function ChatInterface({ displayMode = 'page', onClose, messages, setMess
     setIsLoading(true);
 
     try {
-      const context = prepareAgentContext();
-      
-      // Check cache first
-      const cacheKey = getGeneralCacheKey(text, context);
+      const cacheKey = getGeneralCacheKey(text);
       const cachedResponse = generalResponseCache.get(cacheKey);
       
       if (cachedResponse) {
@@ -175,15 +155,14 @@ export function ChatInterface({ displayMode = 'page', onClose, messages, setMess
         setTimeout(() => inputRef.current?.focus(), 0);
         return;
       }
-      console.log('📤 Sending to API:', { message: text, context });
+      console.log('📤 Sending to /api/general-chat:', { message: text, userType: 'patient' });
       
-      const response = await fetch('/api/bedrock-chat', {
+      const response = await fetch('/api/general-chat', { // Changed to /api/general-chat
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          message: text,  // Send the actual message text
-          context: context,  // Send the full context object
-          signal: controller.signal
+          message: text,
+          userType: 'patient' // Added userType
         }), 
       });
 
@@ -191,7 +170,6 @@ export function ChatInterface({ displayMode = 'page', onClose, messages, setMess
         const data = await response.json();
         console.log('📥 Received from API:', data);
         
-        // Cache the response
         generalResponseCache.set(cacheKey, data.response);
         
         const cleanResponse = formatAIResponse(data.response);
@@ -203,15 +181,15 @@ export function ChatInterface({ displayMode = 'page', onClose, messages, setMess
         };
         setMessages((prevMessages) => [...prevMessages, aiMessage]);
       } else {
-        throw new Error(`API call failed with status: ${response.status}`);
+        const errorData = await response.text();
+        console.error('API Error response:', errorData);
+        throw new Error(`API call failed with status: ${response.status}, body: ${errorData}`);
       }
     } catch (error) {
       console.error('Chat error:', error);
       
       let fallbackResponse = getPlaceholderResponse(text);
-      if (error.name === 'AbortError') {
-        fallbackResponse = 'Response took too long. Please try a shorter question.';
-      }
+      // No AbortError check here as AbortController was removed for this path
       const cleanFallbackResponse = formatAIResponse(fallbackResponse);
       const aiMessage: Message = { 
         id: `${Date.now()}-fallback`, 
@@ -313,3 +291,5 @@ export function ChatInterface({ displayMode = 'page', onClose, messages, setMess
     </div>
   );
 }
+
+    
