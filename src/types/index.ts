@@ -22,7 +22,6 @@ export interface TreatmentPlan {
   id: string;
   title: string;
   price: string;
-  icon: React.ReactNode;
   features: string[];
   description: string;
   isPopular?: boolean;
@@ -52,4 +51,5 @@ export interface AssessmentData {
   selectedTags?: SelectedTag[];
   currentStep?: number;
   assessmentResults?: AssessmentResults;
+  selectedTreatmentPlan?: TreatmentPlan;
 }
