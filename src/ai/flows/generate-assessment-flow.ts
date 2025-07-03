@@ -48,8 +48,8 @@ const prompt = ai.definePrompt({
 Analyze the user's selected images and contributing factors to determine the hair loss classification and severity.
 
 - **Classification**: Based on all available data (image patterns and factors), classify the likely hair loss type into one of: 'Temporary', 'Permanent Non-Scarring', 'Permanent Scarring'. If the data is conflicting or insufficient, classify as 'Unknown'. For example, 'Frontal Fibrosing Alopecia' points to 'Permanent Scarring'. 'Androgenetic Alopecia (AGA)' points to 'Permanent Non-Scarring'. 'Telogen Effluvium' points to 'Temporary'.
-- **Severity**: Estimate the severity based on the stage of hair loss images (e.g., AGA Stage 5 is 'Severe') and the number and type of contributing factors. Classify as 'Mild', 'Mild to Moderate', 'Moderate', 'Moderate to Severe', or 'Severe'. If unable to determine, use 'Unknown'.
-- **Summaries**: Create summaries for both `selectedImageSummary` and `contributingFactorsSummary` by grouping the user's selections by their 'category' field. The result should be an object where keys are the category names and values are arrays of the descriptions/tags.
+- **Severity**: Estimate the severity based on the stage of hair loss images (e.g., AGA Stage 5 is 'Severe') and the number and type of contributing factors. Classify as 'Mild', 'Mild to Moderate', 'Moderate', 'Moderate to Severe', 'Severe'. If unable to determine, use 'Unknown'.
+- **Summaries**: Create summaries for both 'selectedImageSummary' and 'contributingFactorsSummary' by grouping the user's selections by their 'category' field. The result should be an object where keys are the category names and values are arrays of the descriptions/tags.
 
 Here is the user's data:
 
