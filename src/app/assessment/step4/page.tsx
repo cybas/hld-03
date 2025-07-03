@@ -128,7 +128,12 @@ export default function AssessmentStep4Page() {
                         key={option}
                         variant={isSelected ? 'default' : 'outline'}
                         onClick={() => handleSelectPreference(key as PreferenceKey, option)}
-                        className={cn('rounded-full h-auto py-2 px-4 transition-all', isSelected && 'ring-2 ring-offset-2 ring-primary')}
+                        className={cn(
+                            'rounded-full h-auto py-2 px-4 transition-all shadow-sm',
+                            isSelected
+                            ? 'ring-2 ring-offset-2 ring-primary'
+                            : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200 hover:text-slate-800 hover:border-primary'
+                        )}
                       >
                         {option}
                       </Button>
