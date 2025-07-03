@@ -5,127 +5,96 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import type { AssessmentData, TreatmentPreferences } from '@/types';
+import { ArrowLeft, Timer, Hospital, CircleDollarSign, MapPin, TrendingUp, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { AssessmentData, TreatmentPlan } from '@/types';
-import { ArrowLeft, CheckCircle, Shield, Gem, Rocket, Bot } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
 
-interface ClientTreatmentPlan extends TreatmentPlan {
-  icon: React.ReactNode;
-}
+type PreferenceKey = keyof TreatmentPreferences;
 
-const treatmentPlans: ClientTreatmentPlan[] = [
-  {
-    id: 'essential',
-    title: 'Essential Care',
-    price: '$150/month',
-    icon: <Shield className="h-10 w-10 text-primary mb-4" />,
-    features: [
-      'Topical Minoxidil 5%',
-      'DHT Blocking Shampoo',
-      'Biotin & Vitamin D Supplements',
-      'Quarterly AI Progress Tracking',
-    ],
-    description: 'A foundational plan to address common hair loss factors and support regrowth.',
+const preferenceOptions = {
+  timeCommitment: {
+    icon: <Timer className="h-6 w-6 text-primary" />,
+    title: 'Time Commitment',
+    question: 'How much time can you dedicate to daily hair care?',
+    options: ['5-10 minutes daily', '15-20 minutes daily', '30+ minutes daily', 'I prefer minimal daily routine'],
   },
-  {
-    id: 'advanced',
-    title: 'Advanced Therapy',
-    price: '$250/month',
-    icon: <Gem className="h-10 w-10 text-primary mb-4" />,
-    features: [
-      'Everything in Essential Care',
-      'Oral Finasteride (1mg/day)',
-      'Customized Nutrient Blend',
-      'Personalized Diet Plan',
-      'Monthly AI Progress Tracking',
-    ],
-    description: 'A comprehensive approach combining medication and lifestyle for enhanced results.',
-    isPopular: true,
+  clinicVisits: {
+    icon: <Hospital className="h-6 w-6 text-primary" />,
+    title: 'Clinic Visits',
+    question: 'Are you open to visiting a clinic for treatments?',
+    options: ['Yes, I can visit regularly (weekly/bi-weekly)', 'Occasionally (1-2 times per month)', 'Rarely (only for initial consultation)', 'No clinic visits - home treatment only'],
   },
-  {
-    id: 'comprehensive',
-    title: 'Comprehensive Program',
-    price: '$450/month',
-    icon: <Rocket className="h-10 w-10 text-primary mb-4" />,
-    features: [
-      'Everything in Advanced Therapy',
-      'Low-Level Laser Therapy (LLLT) Cap',
-      'Quarterly Dermatologist Consultation',
-      'Priority Support',
-    ],
-    description: 'Our most powerful plan for those seeking maximum intervention and expert guidance.',
+  monthlyBudget: {
+    icon: <CircleDollarSign className="h-6 w-6 text-primary" />,
+    title: 'Monthly Budget',
+    question: 'What\'s your comfortable monthly budget for hair loss treatment?',
+    options: ['Under €200/month', '€200-€400/month', '€400-€700/month', '€700+ per month', 'Budget is not a primary concern'],
   },
-];
+  location: {
+    icon: <MapPin className="h-6 w-6 text-primary" />,
+    title: 'Location Access',
+    question: 'Where are you located?',
+    options: ['UAE (Dubai, Abu Dhabi, Al Ain)', 'Other Middle East region', 'Europe', 'North America', 'Other international location'],
+  },
+  treatmentIntensity: {
+    icon: <TrendingUp className="h-6 w-6 text-primary" />,
+    title: 'Treatment Intensity',
+    question: 'What\'s your preferred approach to treatment?',
+    options: ['Conservative - start gentle and build up', 'Moderate - balanced approach with proven methods', 'Aggressive - maximum intervention for fastest results', 'Guided - help me decide what\'s appropriate'],
+  },
+  habitReadiness: {
+    icon: <Sparkles className="h-6 w-6 text-primary" />,
+    title: 'Readiness to Change Habits',
+    question: 'How ready are you to modify your current routine?',
+    options: ['Very ready - I\'ll change whatever is needed', 'Somewhat ready - minor changes are fine', 'Cautious - prefer minimal lifestyle changes', 'Unsure - need guidance on what changes help'],
+  },
+};
 
-
-const LoadingSkeleton = () => (
-  <div className="space-y-8">
-    <Card>
-      <CardHeader>
-        <Skeleton className="h-6 w-3/4" />
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-full" />
-        </div>
-      </CardContent>
-    </Card>
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <Card><CardContent className="p-6 pt-16"><Skeleton className="h-48 w-full" /></CardContent></Card>
-      <Card><CardContent className="p-6 pt-16"><Skeleton className="h-48 w-full" /></CardContent></Card>
-      <Card><CardContent className="p-6 pt-16"><Skeleton className="h-48 w-full" /></CardContent></Card>
-    </div>
-  </div>
-);
-
+const initialPreferences: TreatmentPreferences = {
+  timeCommitment: '',
+  clinicVisits: '',
+  monthlyBudget: '',
+  location: '',
+  treatmentIntensity: '',
+  habitReadiness: '',
+};
 
 export default function AssessmentStep4Page() {
-  const [assessmentData, setAssessmentData] = useState<AssessmentData | null>(null);
-  const [selectedPlan, setSelectedPlan] = useState<TreatmentPlan | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [preferences, setPreferences] = useState<TreatmentPreferences>(initialPreferences);
 
   useEffect(() => {
-    document.title = 'HairlossDoctor.AI Treatment Path - Step 4/5';
+    document.title = 'HairlossDoctor.AI Treatment Preferences - Step 4/5';
     const storedDataString = sessionStorage.getItem('assessmentData');
     if (storedDataString) {
       try {
         const data: AssessmentData = JSON.parse(storedDataString);
-        setAssessmentData(data);
-        if (data.selectedTreatmentPlan) {
-          setSelectedPlan(data.selectedTreatmentPlan);
+        if (data.treatmentPreferences) {
+          setPreferences(data.treatmentPreferences);
         }
       } catch (error) {
         console.error("Failed to parse assessmentData:", error);
       }
     }
-    setIsLoading(false);
   }, []);
 
-  const handleSelectPlan = (plan: TreatmentPlan) => {
-    const planToSave: TreatmentPlan = {
-      id: plan.id,
-      title: plan.title,
-      price: plan.price,
-      features: plan.features,
-      description: plan.description,
-      isPopular: plan.isPopular,
-    };
-    setSelectedPlan(planToSave);
-    const updatedData: AssessmentData = { ...assessmentData, selectedTreatmentPlan: planToSave, currentStep: 4 };
+  const handleSelectPreference = (key: PreferenceKey, value: string) => {
+    const newPreferences = { ...preferences, [key]: value };
+    setPreferences(newPreferences);
+
+    const storedDataString = sessionStorage.getItem('assessmentData');
+    const data: AssessmentData = storedDataString ? JSON.parse(storedDataString) : {};
+    const updatedData: AssessmentData = { ...data, treatmentPreferences: newPreferences, currentStep: 4 };
     sessionStorage.setItem('assessmentData', JSON.stringify(updatedData));
   };
-  
-  const results = assessmentData?.assessmentResults;
+
+  const isComplete = Object.values(preferences).every(value => value !== '');
 
   return (
     <>
       <div className="container mx-auto px-4 py-8 pb-28">
         <div className="flex items-center justify-between mb-4 text-sm text-muted-foreground">
-           <div>
+          <div>
             <Link href="/" className="text-primary hover:underline">Home</Link>
             <span className="mx-2">/</span>
             <Link href="/assessment/step1" className="hover:underline">Assessment</Link>
@@ -136,84 +105,40 @@ export default function AssessmentStep4Page() {
         <Progress value={80} className="w-full mb-6" />
 
         <div className="mb-8 text-center">
-          <h1 className="text-2xl font-semibold mb-2 text-foreground">Step 4: Choose Your Recommended Treatment Path</h1>
-          <p className="text-muted-foreground">Based on your assessment, here are some suitable options.</p>
+          <h1 className="text-2xl font-semibold mb-2 text-foreground">Step 4: Treatment Preferences</h1>
+          <p className="text-muted-foreground">Help us tailor the right treatment plan for your lifestyle and budget.</p>
         </div>
 
-        {isLoading && <LoadingSkeleton />}
-
-        {!isLoading && !results && (
-          <Card className="bg-destructive/10 border-destructive text-center">
-            <CardContent className="p-6 text-destructive-foreground font-medium">
-              <p>Could not load assessment results.</p>
-              <Button variant="outline" asChild className="mt-4">
-                <Link href="/assessment/step3">Go back to results</Link>
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
-        {results && (
-          <div className="space-y-8">
-            <Card>
+        <div className="space-y-6 max-w-4xl mx-auto">
+          {Object.entries(preferenceOptions).map(([key, value]) => (
+            <Card key={key}>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg"><Bot size={20} /> Your AI Assessment Summary</CardTitle>
+                <CardTitle className="flex items-center gap-3">
+                  {value.icon}
+                  {value.title}
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                   <div className="bg-muted p-4 rounded-lg">
-                      <p className="text-sm font-medium text-muted-foreground">Classification</p>
-                      <p className="text-lg font-semibold text-primary">{results.classification}</p>
-                  </div>
-                  <div className="bg-muted p-4 rounded-lg">
-                      <p className="text-sm font-medium text-muted-foreground">Severity</p>
-                      <p className="text-lg font-semibold text-primary">{results.severity}</p>
-                  </div>
+                <p className="mb-4 text-muted-foreground">{value.question}</p>
+                <div className="flex flex-wrap gap-2">
+                  {value.options.map(option => {
+                    const isSelected = preferences[key as PreferenceKey] === option;
+                    return (
+                      <Button
+                        key={option}
+                        variant={isSelected ? 'default' : 'outline'}
+                        onClick={() => handleSelectPreference(key as PreferenceKey, option)}
+                        className={cn('rounded-full h-auto py-2 px-4 transition-all', isSelected && 'ring-2 ring-offset-2 ring-primary')}
+                      >
+                        {option}
+                      </Button>
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
-              {treatmentPlans.map((plan) => {
-                const isSelected = selectedPlan?.id === plan.id;
-                return (
-                  <Card
-                    key={plan.id}
-                    onClick={() => handleSelectPlan(plan)}
-                    className={cn(
-                      'cursor-pointer transition-all duration-300 flex flex-col',
-                      isSelected ? 'border-primary ring-2 ring-primary shadow-xl' : 'hover:shadow-lg hover:-translate-y-1',
-                      plan.isPopular ? 'border-secondary' : ''
-                    )}
-                  >
-                    <CardHeader className="items-center text-center relative">
-                      {plan.isPopular && (
-                         <Badge variant="secondary" className="absolute top-4 right-4">Most Popular</Badge>
-                      )}
-                      {plan.icon}
-                      <CardTitle>{plan.title}</CardTitle>
-                      <CardDescription className="text-2xl font-bold text-foreground">{plan.price}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="flex-grow flex flex-col">
-                      <p className="text-sm text-muted-foreground text-center mb-6">{plan.description}</p>
-                      <ul className="space-y-3 text-sm flex-grow">
-                        {plan.features.map((feature, i) => (
-                           <li key={i} className="flex items-start">
-                            <CheckCircle className="h-4 w-4 mr-3 mt-0.5 text-green-500 flex-shrink-0" />
-                            <span>{feature}</span>
-                          </li>
-                        ))}
-                      </ul>
-                      <Button variant={isSelected ? 'default' : 'outline'} className="w-full mt-6">
-                        {isSelected ? 'Selected' : 'Select Plan'}
-                      </Button>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
-        )}
+          ))}
+        </div>
       </div>
       
       <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border shadow-up-md z-10">
@@ -224,13 +149,15 @@ export default function AssessmentStep4Page() {
             </Button>
             <Button
               size="lg"
-              disabled={!selectedPlan}
+              disabled={!isComplete}
               asChild
             >
-              <Link href="/assessment/step5">Next: Final Review</Link>
+              <Link href="/assessment/step5">Get My Personalized Treatment Plan</Link>
             </Button>
           </div>
-          {!selectedPlan && <p className="text-xs text-muted-foreground mt-1 text-center">Please select a treatment plan to continue.</p>}
+          {!isComplete && (
+            <p className="text-xs text-muted-foreground mt-1 text-center">Please complete all sections to continue.</p>
+          )}
         </div>
       </div>
     </>

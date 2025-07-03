@@ -46,10 +46,20 @@ export interface AssessmentResults {
   generatedAt: string;
 }
 
+export interface TreatmentPreferences {
+  timeCommitment: string;
+  clinicVisits: string;
+  monthlyBudget: string;
+  location: string;
+  treatmentIntensity: string;
+  habitReadiness: string;
+}
+
 export interface AssessmentData {
   selectedImages?: HairLossImage[];
   selectedTags?: SelectedTag[];
   currentStep?: number;
   assessmentResults?: AssessmentResults;
+  treatmentPreferences?: TreatmentPreferences;
   selectedTreatmentPlan?: TreatmentPlan;
 }
