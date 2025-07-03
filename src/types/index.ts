@@ -39,8 +39,8 @@ export interface RecommendationDetail {
 }
 
 export interface AssessmentResults {
-  classification: 'Temporary' | 'Permanent Non-Scarring' | 'Permanent Scarring';
-  severity: 'Mild' | 'Mild to Moderate' | 'Moderate' | 'Moderate to Severe' | 'Severe';
+  classification: 'Temporary' | 'Permanent Non-Scarring' | 'Permanent Scarring' | 'Unknown';
+  severity: 'Mild' | 'Mild to Moderate' | 'Moderate' | 'Moderate to Severe' | 'Severe' | 'Unknown';
   selectedImageSummary: SummaryByCategory;
   contributingFactorsSummary: SummaryByCategory;
   recommendations: RecommendationDetail[];
@@ -49,4 +49,7 @@ export interface AssessmentResults {
 
 export interface AssessmentData {
   selectedImages?: HairLossImage[];
-  
+  selectedTags?: SelectedTag[];
+  currentStep?: number;
+  assessmentResults?: AssessmentResults;
+}

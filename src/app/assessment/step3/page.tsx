@@ -5,22 +5,15 @@ import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import type {
-  Message,
-  HairLossImage,
-  SelectedTag,
-  AssessmentData,
-  AssessmentResults,
-  RecommendationDetail,
-  SummaryByCategory
-} from '@/types';
-import { ArrowLeft, SendHorizontal, MessageSquare, Info, Lightbulb, CheckCircle2 } from 'lucide-react';
-import { formatAIResponse } from '@/utils/responseFormatter';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import type { AssessmentData, RecommendationDetail, SummaryByCategory } from '@/types';
+import { ArrowLeft, Lightbulb, CheckCircle2, ShieldAlert, BookOpen, Bot, Pilcrow } from 'lucide-react';
+import { generateAssessment } from '@/ai/flows/generate-assessment-flow';
+import { Skeleton } from '@/components/ui/skeleton';
 
+// This map is used on the client-side to add detailed recommendations after the AI generates the initial assessment.
 const recommendationMap: Record<string, Omit<RecommendationDetail, 'tag' | 'category'>> = {
   // DIET & NUTRITION (20 tags)
   'Zero red meat diet': {
@@ -113,11 +106,6 @@ const recommendationMap: Record<string, Omit<RecommendationDetail, 'tag' | 'cate
     impact: 'Can cause sudden, massive hair shedding within 2-3 months',
     recommendation: 'Resume balanced nutrition immediately. Include eggs (50-100g), nuts (30g), seeds (20-30g), legumes (150g), fish (100-150g). Supplement protein, iron, zinc.'
   },
-   'Crash dieting': { 
-    issue: 'Protein, iron, zinc, biotin, and severe calorie deficiency',
-    impact: 'Can cause sudden, massive hair shedding within 2-3 months',
-    recommendation: 'Resume balanced nutrition immediately. Include eggs (50-100g), nuts (30g), seeds (20-30g), legumes (150g), fish (100-150g). Supplement protein, iron, zinc.'
-  },
   'Sports-focused/Athletic diet': {
     issue: 'Iron, zinc, and biotin deficiency from high nutrient demands',
     impact: 'Micronutrient imbalance may affect hair health despite adequate calories',
@@ -128,8 +116,6 @@ const recommendationMap: Record<string, Omit<RecommendationDetail, 'tag' | 'cate
     impact: 'Hair effects depend on regional nutritional gaps',
     recommendation: 'Adjust to local dietary gaps. Focus on legumes, leafy greens, fish or fortified alternatives based on regional needs.'
   },
-
-  // MEDICATIONS & DRUGS (11 tags)
   'Chemotherapy (Cancer treatment)': {
     issue: 'Directly damages rapidly dividing hair follicle cells during treatment',
     impact: 'Can cause sudden, diffuse shedding (anagen effluvium), potentially total hair loss',
@@ -185,8 +171,6 @@ const recommendationMap: Record<string, Omit<RecommendationDetail, 'tag' | 'cate
     impact: 'Rare cause of diffuse shedding (reported in less than 1% of users)',
     recommendation: 'Often resolves without discontinuation. Switching statins may help if hair loss is confirmed medication-related.'
   },
-
-  // EXTERNAL FACTORS (10 tags)
   'Hard water exposure': {
     issue: 'Mineral buildup from calcium and magnesium deposits on hair shaft',
     impact: 'Causes dryness, breakage, dullness, and scalp irritation from mineral accumulation',
@@ -207,12 +191,12 @@ const recommendationMap: Record<string, Omit<RecommendationDetail, 'tag' | 'cate
     impact: 'Increased risk of scalp infections, irritation, and bacterial overgrowth',
     recommendation: 'Clean scalp regularly, use absorbent headbands, avoid overwashing, use dry shampoo between washes.'
   },
-  'Windy conditions': { // Changed from 'Wind'
+  'Windy conditions': { 
     issue: 'Mechanical friction and constant hair movement causes physical damage',
     impact: 'Can cause breakage, tangling, scalp irritation, and moisture loss',
     recommendation: 'Cover hair with scarves or hats in windy conditions, use protective hairstyles (braids, buns), apply leave-in conditioners.'
   },
-  'Seasonal weather changes': { // Changed from 'Seasonal changes'
+  'Seasonal weather changes': { 
     issue: 'Weather fluctuations affect scalp moisture and may trigger seasonal shedding',
     impact: 'Can cause dryness, increased shedding, and scalp sensitivity changes',
     recommendation: 'Adjust hair care by season: moisturizing in winter, UV-protection in summer, monitor for increased shedding during transitions.'
@@ -237,8 +221,6 @@ const recommendationMap: Record<string, Omit<RecommendationDetail, 'tag' | 'cate
     impact: 'Can speed up hair shedding (telogen effluvium) and chronic inflammation',
     recommendation: 'Practice stress management: yoga, mindfulness, scalp massage, regular exercise, adequate sleep (7-9 hours).'
   },
-
-  // HAIRCARE HABITS (19 tags)
   'Frequent tight hairstyles': {
     issue: 'Constant tension on hair follicles weakens root structure over time',
     impact: 'Can cause traction alopecia (hairline recession, thinning) and permanent damage',
@@ -294,7 +276,7 @@ const recommendationMap: Record<string, Omit<RecommendationDetail, 'tag' | 'cate
     impact: 'Can cause scalp irritation, inflammation, and disrupted scalp barrier function',
     recommendation: 'Use gentle scalp massages, avoid hard brushes/scrubs, use fingertips not nails, gentle circular motions, rinse thoroughly.'
   },
-  'Not using shower filter': { // Simplified from 'Not using a shower filter (Hard water)'
+  'Not using shower filter': { 
     issue: 'Calcium and magnesium deposits accumulate on hair shaft without filtration',
     impact: 'Can cause mineral buildup leading to dryness, breakage, and dullness',
     recommendation: 'Install shower filter immediately, use chelating shampoos weekly, consider whole-house water softening, final rinse with distilled water.'
@@ -304,12 +286,12 @@ const recommendationMap: Record<string, Omit<RecommendationDetail, 'tag' | 'cate
     impact: 'Can cause stripping of natural oils, dryness, breakage, and scalp irritation',
     recommendation: 'Reduce to 2-3x/week, use dry shampoo between washes, focus shampoo on scalp only, choose sulfate-free formulas.'
   },
-  'Using harsh shampoos': { // Simplified from 'Using harsh shampoos (Sulfates, Alcohol)'
+  'Using harsh shampoos': { 
     issue: 'Aggressive surfactants and alcohols strip natural oils and disrupt scalp pH',
     impact: 'Can cause scalp dryness, irritation, and hair fragility from barrier disruption',
     recommendation: 'Switch to sulfate-free, pH-balanced shampoos (4.5-6.5), look for gentle cleansing agents, avoid alcohol-based products.'
   },
-  'Too many styling products': { // Simplified from 'Using too many styling products'
+  'Too many styling products': { 
     issue: 'Product accumulation can block follicles and create bacterial growth environment',
     impact: 'Can cause scalp buildup, pore clogging, and potential follicle inflammation',
     recommendation: 'Minimize product layering, cleanse scalp thoroughly 1-2x/week, choose water-based products, apply to lengths not scalp.'
@@ -329,7 +311,11 @@ const recommendationMap: Record<string, Omit<RecommendationDetail, 'tag' | 'cate
     impact: 'Can cause scalp buildup, inflammation, and hair follicle damage from poor conditions',
     recommendation: 'Regular cleansing with mild shampoo, gentle exfoliation 1-2x/month, scalp massage for circulation, antifungal treatments if needed.'
   },
-  // HORMONAL FACTORS (18 tags)
+  'Crash dieting': { 
+    issue: 'Protein, iron, zinc, biotin, and severe calorie deficiency',
+    impact: 'Can cause sudden, massive hair shedding within 2-3 months',
+    recommendation: 'Resume balanced nutrition immediately. Include eggs (50-100g), nuts (30g), seeds (20-30g), legumes (150g), fish (100-150g). Supplement protein, iron, zinc.'
+  },
   'Pregnancy/postpartum': {
     issue: 'Postpartum estrogen drop causes sudden shift from extended growth phase to shedding',
     impact: 'Can cause sudden diffuse shedding 2-4 months after delivery as hormone levels normalize',
@@ -395,7 +381,7 @@ const recommendationMap: Record<string, Omit<RecommendationDetail, 'tag' | 'cate
     impact: 'Variable effects - can improve or worsen hair loss depending on formulation',
     recommendation: 'Choose anti-androgenic formulations, monitor hair changes, consider alternatives if hair loss occurs, nutritional support during transitions.'
   },
-  'Currently taking hormones': { // Simplified from 'Currently taking hormones (testosterone, estrogen, etc.)'
+  'Currently taking hormones': { 
     issue: 'Hormone replacement therapy effects depend on type, dose, and individual response',
     impact: 'Can have variable effects on hair growth - may help or harm depending on specifics',
     recommendation: 'Work with experienced hormone specialist, regular monitoring and adjustments, consider bioidentical options, track hair changes.'
@@ -415,13 +401,11 @@ const recommendationMap: Record<string, Omit<RecommendationDetail, 'tag' | 'cate
     impact: 'Can cause sudden diffuse shedding (shock loss) 2-3 months after traumatic event',
     recommendation: 'Stress management, counseling, gentle hair care, balanced nutrition. Usually reversible once emotional healing progresses.'
   },
-  'Other hormone issues': { // Simplified from 'Other hormone issues (please describe)'
+  'Other hormone issues': { 
     issue: 'Various hormonal conditions can affect hair growth through different mechanisms',
     impact: 'Hair impact varies depending on specific hormonal condition described',
     recommendation: 'Comprehensive hormonal evaluation, address underlying medical conditions, targeted treatments based on specific imbalances.'
   },
-
-  // MENTAL HEALTH (10 tags)
   'High stress': {
     issue: 'Sustained stress increases cortisol levels, disrupting hair follicle cycling',
     impact: 'Can cause telogen effluvium - pushing hair follicles into shedding phase prematurely',
@@ -472,18 +456,11 @@ const recommendationMap: Record<string, Omit<RecommendationDetail, 'tag' | 'cate
     impact: 'Effects vary by specific condition but generally impact self-care and stress levels',
     recommendation: 'Professional assessment for proper diagnosis, individualized treatment plan, holistic care addressing both mental health and hair care.'
   },
-
-  // PHYSICAL ACTIVITY (9 tags)
   'Intense workouts/Overtraining': {
     issue: 'Chronic stress from excessive exercise, cortisol spikes, and nutrient depletion',
     impact: 'Can cause telogen effluvium and poor recovery affecting hair growth',
     recommendation: 'Follow 80/20 rule (80% moderate, 20% high intensity), include 1-2 rest days/week, increase protein (1.2-1.6g/kg), stress monitoring.'
   },
-  // 'Wearing tight headgear/helmets': { // Already defined in Haircare Habits, but distinct context for physical activity
-  //   issue: 'Constant pressure and friction damage hair shafts and follicles during activity',
-  //   impact: 'Can cause traction alopecia and breakage at pressure points (hairline, temples) specific to workout gear',
-  //   recommendation: 'Ensure proper fit for sports headgear, use moisture-wicking liners, rotate position when possible, apply leave-in conditioner before use, take breaks if worn for long periods.'
-  // }, // This one is a duplicate from haircare. Assuming it's okay as context is slightly different.
   'Excessive sweating': {
     issue: 'Salt crystals from dried sweat irritate scalp and can clog follicles post-exercise',
     impact: 'Can cause scalp buildup, bacterial growth, inflammation, and itching if not addressed promptly',
@@ -519,8 +496,6 @@ const recommendationMap: Record<string, Omit<RecommendationDetail, 'tag' | 'cate
     impact: 'Can slow hair regrowth and recovery due to inadequate repair time for physically active individuals',
     recommendation: 'Prioritize sleep (8-9 hours for athletes), post-workout cool-down, stress management, magnesium-rich foods (nuts, seeds, leafy greens).'
   },
-
-  // SCALP CONDITIONS (19 tags)
   'Dandruff': {
     issue: 'Malassezia yeast overgrowth leading to flaking and mild inflammation',
     impact: 'Mild inflammation can affect follicle health and increase shedding',
@@ -611,21 +586,250 @@ const recommendationMap: Record<string, Omit<RecommendationDetail, 'tag' | 'cate
     impact: 'May indicate circulation problems unless severe enough to impair blood flow',
     recommendation: 'Use room temperature water, warm up gradually, improve circulation with gentle massage, address underlying issues, protect from cold.'
   },
-  'Other scalp issues (Describe)': {
+  'Other scalp issues': {
     issue: 'Various scalp conditions not covered by standard categories',
     impact: 'Hair loss risk varies depending on specific condition described',
     recommendation: 'Detailed symptom documentation, professional evaluation required, avoid self-diagnosis, keep symptom diary, photograph changes if possible.'
   },
-
-  // DEFAULT FALLBACK
   '__DEFAULT__': {
     issue: 'This factor has been identified as potentially contributing to your hair health.',
     impact: 'The specific impact can vary depending on individual circumstances and other combined factors.',
     recommendation: 'Consider discussing this factor with a healthcare provider or dermatologist for personalized advice and to understand its relevance to your specific situation.'
   }
 };
-```
 
-This complete recommendation map includes ALL possible tags from your comprehensive knowledge base. Now every tag will show specific, detailed recommendations instead of generic placeholder text!"
+const LoadingSkeleton = () => (
+  <div className="space-y-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-6 w-3/4" />
+          <Skeleton className="h-4 w-1/2" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-10 w-full" />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-6 w-3/4" />
+          <Skeleton className="h-4 w-1/2" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-10 w-full" />
+        </CardContent>
+      </Card>
+    </div>
+    <Card>
+      <CardHeader>
+        <Skeleton className="h-6 w-1/3" />
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <Skeleton className="h-8 w-full" />
+        <Skeleton className="h-8 w-full" />
+        <Skeleton className="h-8 w-full" />
+      </CardContent>
+    </Card>
+  </div>
+);
 
-🎉 **This will fix the issue completely** - users will get detailed, actionable advice for every single factor they select
+export default function AssessmentStep3Page() {
+  const [assessmentData, setAssessmentData] = useState<AssessmentData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    document.title = 'HairlossDoctor.AI Assessment Results - Step 3/5';
+    const storedDataString = sessionStorage.getItem('assessmentData');
+    if (!storedDataString) {
+      setError("No assessment data found. Please start from Step 1.");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const data: AssessmentData = JSON.parse(storedDataString);
+
+      if (data.assessmentResults) {
+        setAssessmentData(data);
+        setIsLoading(false);
+      } else {
+        const runAssessment = async () => {
+          if (!data.selectedImages || !data.selectedTags) {
+             setError("Incomplete data. Please go back and complete Steps 1 and 2.");
+             setIsLoading(false);
+             return;
+          }
+          try {
+            const aiResults = await generateAssessment({
+              selectedImages: data.selectedImages,
+              selectedTags: data.selectedTags,
+            });
+
+            const recommendations = data.selectedTags.map(tag => {
+              const details = recommendationMap[tag.tag] || recommendationMap['__DEFAULT__'];
+              return { ...details, tag: tag.tag, category: tag.category };
+            });
+
+            const finalResults: AssessmentData = {
+              ...data,
+              assessmentResults: {
+                ...aiResults,
+                recommendations,
+                generatedAt: new Date().toISOString(),
+              },
+              currentStep: 3,
+            };
+
+            sessionStorage.setItem('assessmentData', JSON.stringify(finalResults));
+            setAssessmentData(finalResults);
+          } catch (e) {
+            console.error("Error generating assessment:", e);
+            setError("Sorry, there was an error generating your assessment. Please try again.");
+          } finally {
+            setIsLoading(false);
+          }
+        };
+        runAssessment();
+      }
+    } catch (e) {
+      console.error("Failed to parse assessmentData from sessionStorage:", e);
+      setError("Failed to load assessment data. Please start over.");
+      setIsLoading(false);
+    }
+  }, []);
+
+  const results = assessmentData?.assessmentResults;
+
+  const renderSummary = (summary: SummaryByCategory) => {
+    if (!summary || Object.keys(summary).length === 0) {
+      return <p className="text-muted-foreground">No items selected.</p>;
+    }
+    return (
+      <ul className="space-y-2">
+        {Object.entries(summary).map(([category, items]) => (
+          <li key={category}>
+            <p className="font-semibold text-foreground">{category}:</p>
+            <div className="flex flex-wrap gap-2 mt-1">
+              {items.map(item => <Badge key={item} variant="secondary" className="font-normal">{item}</Badge>)}
+            </div>
+          </li>
+        ))}
+      </ul>
+    );
+  };
+  
+  return (
+    <>
+      <div className="container mx-auto px-4 py-8 pb-28">
+        <div className="flex items-center justify-between mb-4 text-sm text-muted-foreground">
+           <div>
+            <Link href="/" className="text-primary hover:underline">Home</Link>
+            <span className="mx-2">/</span>
+            <Link href="/assessment/step1" className="hover:underline">Assessment</Link>
+            <span className="mx-2">/</span>
+            <span>Step 3 of 5</span>
+          </div>
+        </div>
+        <Progress value={60} className="w-full mb-6" />
+
+        <div className="mb-8 text-center">
+          <h1 className="text-2xl font-semibold mb-2 text-foreground">Step 3: Your AI-Powered Assessment Results</h1>
+          <p className="text-muted-foreground">Here is a summary based on your selections.</p>
+        </div>
+
+        {isLoading && <LoadingSkeleton />}
+        {error && <Card className="bg-destructive/10 border-destructive"><CardContent className="p-6 text-destructive-foreground font-medium">{error}</CardContent></Card>}
+        
+        {results && !isLoading && !error && (
+          <div className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card className="flex flex-col">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2"><Bot size={20} /> AI Classification</CardTitle>
+                  <CardDescription>The likely type and severity of your hair loss.</CardDescription>
+                </CardHeader>
+                <CardContent className="flex-grow space-y-3">
+                    <div>
+                        <p className="text-sm font-medium text-muted-foreground">Classification</p>
+                        <p className="text-lg font-semibold text-primary">{results.classification}</p>
+                    </div>
+                    <div>
+                        <p className="text-sm font-medium text-muted-foreground">Severity</p>
+                        <p className="text-lg font-semibold text-primary">{results.severity}</p>
+                    </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2"><Pilcrow size={20} /> Summaries</CardTitle>
+                  <CardDescription>A breakdown of your selections.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h4 className="font-semibold text-foreground mb-2">Selected Hair Patterns</h4>
+                    {renderSummary(results.selectedImageSummary)}
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-foreground mb-2">Selected Contributing Factors</h4>
+                    {renderSummary(results.contributingFactorsSummary)}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><BookOpen size={20} /> Detailed Recommendations</CardTitle>
+                    <CardDescription>Based on your selected factors, here are some insights and recommendations. This is for educational purposes and is not a substitute for medical advice.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Accordion type="single" collapsible className="w-full">
+                        {results.recommendations.map((rec, index) => (
+                           <AccordionItem value={`item-${index}`} key={index}>
+                                <AccordionTrigger className="font-semibold text-base hover:no-underline">{rec.tag}</AccordionTrigger>
+                                <AccordionContent className="space-y-4 pt-2">
+                                    <div className="p-4 bg-muted/50 rounded-lg">
+                                        <h4 className="font-semibold flex items-center gap-2 text-foreground"><ShieldAlert size={16} /> The Issue</h4>
+                                        <p className="text-muted-foreground mt-1">{rec.issue}</p>
+                                    </div>
+                                    <div className="p-4 bg-muted/50 rounded-lg">
+                                        <h4 className="font-semibold flex items-center gap-2 text-foreground"><Lightbulb size={16} /> The Impact</h4>
+                                        <p className="text-muted-foreground mt-1">{rec.impact}</p>
+                                    </div>
+                                    <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
+                                        <h4 className="font-semibold flex items-center gap-2 text-primary"><CheckCircle2 size={16} /> Recommendation</h4>
+                                        <p className="text-primary/90 mt-1">{rec.recommendation}</p>
+                                    </div>
+                                </AccordionContent>
+                           </AccordionItem>
+                        ))}
+                    </Accordion>
+                </CardContent>
+            </Card>
+
+          </div>
+        )}
+
+      </div>
+
+      <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border shadow-up-md z-10">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex justify-between items-center">
+            <Button variant="outline" asChild>
+              <Link href="/assessment/step2">Back to Factors</Link>
+            </Button>
+            <Button 
+              size="lg" 
+              disabled={isLoading || !!error}
+              asChild
+            >
+              <Link href="/assessment/step4">Next: Choose Treatment Path</Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
