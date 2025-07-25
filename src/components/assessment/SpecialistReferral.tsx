@@ -16,11 +16,11 @@ const getConditionSpecificExplanation = (data: AssessmentData): string => {
   const { selectedImages = [], assessmentResults } = data;
   
   if (assessmentResults?.classification.includes('Scarring')) {
-    return "Scarring conditions like yours benefit from early specialist intervention to prevent further irreversible follicle damage. A dermatologist can provide an accurate diagnosis and prescribe potent anti-inflammatory treatments.";
+    return "Your results indicate a potential scarring condition. These benefit from early specialist intervention to prevent further irreversible follicle damage. A dermatologist can provide an accurate diagnosis and prescribe potent anti-inflammatory treatments.";
   }
   
-  if (selectedImages.some(img => img.description.includes('AGA - Stage 5') || img.description.includes('AGA - Stage 5 or 6'))) {
-      return "Advanced androgenetic alopecia often requires medical-grade treatments like prescription medications (e.g., Finasteride, Dutasteride) or procedures that are best managed under a specialist's care.";
+  if (selectedImages.some(img => img.description.includes('AGA - Stage 4') || img.description.includes('AGA - Stage 5') || img.description.includes('AGA - Stage 5 or 6'))) {
+      return "Advanced androgenetic alopecia often requires medical-grade treatments like prescription medications (e.g., Finasteride, Dutasteride) or procedures that are best managed under a specialist's care to achieve significant results.";
   }
   
   if (selectedImages.some(img => img.description.includes('Trichotillomania'))) {
@@ -28,10 +28,14 @@ const getConditionSpecificExplanation = (data: AssessmentData): string => {
   }
 
   if (selectedImages.some(img => img.description.includes('Anagen Effluvium') || img.description.includes('Chemotherapy'))) {
-      return "Sudden, widespread hair loss like Anagen Effluvium, often associated with medical treatments like chemotherapy, requires specialist guidance to manage scalp health and support healthy regrowth post-treatment.";
+      return "Sudden, widespread hair loss like Anagen Effluvium, often associated with medical treatments, requires specialist guidance to manage scalp health and support healthy regrowth post-treatment.";
+  }
+  
+  if (selectedImages.some(img => img.description.includes('Lichen Planopilaris') || img.description.includes('Frontal Fibrosing'))) {
+    return "Conditions like Lichen Planopilaris or Frontal Fibrosing Alopecia are forms of scarring alopecia. It is highly recommended to see a specialist for an accurate diagnosis and to start treatment that can help preserve your hair follicles.";
   }
 
-  return "Your selections indicate a condition that requires a more in-depth medical evaluation. A specialist can perform diagnostic tests to confirm the cause and recommend the most effective medical treatments.";
+  return "Your selections indicate a condition that requires a more in-depth medical evaluation. A specialist can perform diagnostic tests (like a trichoscopy or biopsy) to confirm the cause and recommend the most effective medical treatments.";
 };
 
 

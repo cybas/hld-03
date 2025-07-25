@@ -19,8 +19,8 @@ const LoadingSkeleton = () => (
     </div>
 );
 
-const scarringKeywords = ['Scarring', 'Cicatricial'];
-const otherSpecialistKeywords = ['Trichotillomania', 'Anagen Effluvium', 'Traction Alopecia'];
+const scarringKeywords = ['Scarring', 'Cicatricial', 'Frontal Fibrosing', 'Lichen Planopilaris', 'Dissecting Cellulitis', 'CCCA'];
+const otherSpecialistKeywords = ['Trichotillomania', 'Anagen Effluvium', 'Chemotherapy-Induced Alopecia'];
 
 export default function AssessmentStep5Page() {
   const [data, setData] = useState<AssessmentData | null>(null);
@@ -44,19 +44,28 @@ export default function AssessmentStep5Page() {
       
       setData(assessmentData);
 
-      // Main conditional logic to determine layout
+      // Corrected Conditional Logic
       const classification = assessmentData.assessmentResults.classification || '';
-      const severity = assessmentData.assessmentResults.severity || '';
+      const selectedImages = assessmentData.selectedImages;
 
-      const hasScarringCondition = scarringKeywords.some(keyword => classification.includes(keyword));
-      const hasOtherSpecialistCondition = assessmentData.selectedImages.some(img => 
+      // Check 1: Explicit scarring classification from AI
+      const hasScarringClassification = scarringKeywords.some(keyword => classification.includes(keyword));
+      
+      // Check 2: Selected images that are always specialist-level
+      const hasSpecialistImage = selectedImages.some(img => 
+        scarringKeywords.some(keyword => img.description.includes(keyword)) ||
         otherSpecialistKeywords.some(keyword => img.description.includes(keyword))
       );
-      const isAdvancedAGA = (classification.includes('AGA') || assessmentData.selectedImages.some(img => img.description.includes('AGA'))) && 
-                            (severity.includes('Severe') || severity.includes('Moderate to Severe'));
 
+      // Check 3: Advanced AGA (Stage 4+)
+      const hasAdvancedAGA = selectedImages.some(img => 
+          (img.description.includes('AGA - Stage 4') || 
+           img.description.includes('AGA - Stage 5') ||
+           img.description.includes('AGA - Stage 5 or 6') ||
+           img.description.includes('AGA - Stage 3 vertex or 4'))
+      );
 
-      if (hasScarringCondition || hasOtherSpecialistCondition || isAdvancedAGA) {
+      if (hasScarringClassification || hasSpecialistImage || hasAdvancedAGA) {
         setNeedsSpecialist(true);
       } else {
         setNeedsSpecialist(false);
