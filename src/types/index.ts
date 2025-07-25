@@ -18,13 +18,16 @@ export interface SelectedTag {
   category: string;
 }
 
-export interface TreatmentPlan {
+export interface TreatmentPackage {
   id: string;
+  icon: React.ElementType;
+  badge?: 'Most Popular' | 'Best Value' | 'Maximum Results';
   title: string;
   price: string;
+  programPrice: string;
   features: string[];
-  description: string;
-  isPopular?: boolean;
+  expectedResults: string;
+  detailsUrl: string;
 }
 
 export type SummaryByCategory = Record<string, string[]>;
@@ -40,8 +43,8 @@ export interface RecommendationDetail {
 export interface AssessmentResults {
   classification: 'Temporary' | 'Permanent Non-Scarring' | 'Permanent Scarring' | 'Unknown';
   severity: 'Mild' | 'Mild to Moderate' | 'Moderate' | 'Moderate to Severe' | 'Severe' | 'Unknown';
-  selectedImageSummary: SummaryByCategory;
-  contributingFactorsSummary: SummaryByCategory;
+  selectedImageSummary: SummaryByCategory | string;
+  contributingFactorsSummary: SummaryByCategory | string;
   recommendations: RecommendationDetail[];
   generatedAt: string;
 }
@@ -61,5 +64,5 @@ export interface AssessmentData {
   currentStep?: number;
   assessmentResults?: AssessmentResults;
   treatmentPreferences?: TreatmentPreferences;
-  selectedTreatmentPlan?: TreatmentPlan;
+  selectedTreatmentPlanId?: string;
 }
