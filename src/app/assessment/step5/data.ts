@@ -102,30 +102,28 @@ export const filterPackages = (preferences: TreatmentPreferences): { recommended
       budgetFiltered = ['starter', 'essential', 'home_clinic_360', 'intensive'];
   }
 
-  let clinicFiltered = budgetFiltered;
-  if (preferences.clinicVisits === 'No clinic visits - home treatment only') {
-    clinicFiltered = budgetFiltered.filter(pkgId => !['home_clinic_360', 'intensive'].includes(pkgId));
+  let finalFiltered = budgetFiltered;
+
+  // Filter out clinic packages if user prefers home-only OR is outside UAE
+  if (preferences.clinicVisits === 'No clinic visits - home treatment only' || preferences.location !== 'UAE (Dubai, Abu Dhabi, Al Ain)') {
+    finalFiltered = budgetFiltered.filter(pkgId => !['home_clinic_360', 'intensive'].includes(pkgId));
   }
   
-  let locationFiltered = clinicFiltered;
-  if (preferences.location !== 'UAE (Dubai, Abu Dhabi, Al Ain)') {
-    locationFiltered = clinicFiltered.filter(pkgId => !['home_clinic_360', 'intensive'].includes(pkgId));
-  }
-
-  // If no packages match (e.g., low budget but wants clinic), default to best available home care
-  if (locationFiltered.length === 0) {
+  // Fallback logic: If filters result in an empty list (e.g., low budget but wants clinic),
+  // show the best available home-care options within their budget.
+  if (finalFiltered.length === 0) {
       if (budgetFiltered.includes('essential')) {
-          locationFiltered = ['essential', 'starter'];
+        finalFiltered = ['essential', 'starter'];
       } else if (budgetFiltered.includes('starter')) {
-          locationFiltered = ['starter'];
+        finalFiltered = ['starter'];
       } else {
-          // Fallback if no budget-friendly home options available
-          locationFiltered = ['starter'];
+        // Ultimate fallback to the cheapest home-care if nothing else matches
+        finalFiltered = ['starter']; 
       }
   }
 
-  const recommendedId = locationFiltered.length > 0 ? locationFiltered[0] : null;
-  const alternativeIds = locationFiltered.slice(1, 3); // up to 2 alternatives
+  const recommendedId = finalFiltered.length > 0 ? finalFiltered[0] : null;
+  const alternativeIds = finalFiltered.slice(1, 3); // up to 2 alternatives
 
   return {
     recommendedId,
