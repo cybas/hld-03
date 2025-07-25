@@ -11,6 +11,7 @@ export function SiteHeader() {
 
   const nav = [
     { label: 'Features',   href: '#features' },
+    { label: 'Packages',   href: '/packages' },
     { label: 'Pricing',    href: '#pricing'  },
     { label: 'Blog',       href: '#blog'     },
     { label: 'FAQs',       href: '#faqs'     },

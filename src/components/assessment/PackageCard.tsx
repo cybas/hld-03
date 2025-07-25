@@ -10,27 +10,39 @@ import Link from 'next/link';
 
 interface PackageCardProps {
   pkg: TreatmentPackage;
-  recommendationType?: 'primary' | 'alternative';
+  recommendationType?: 'primary' | 'alternative' | 'none';
 }
 
-export function PackageCard({ pkg, recommendationType = 'alternative' }: PackageCardProps) {
+export function PackageCard({ pkg, recommendationType = 'none' }: PackageCardProps) {
   const isRecommended = recommendationType === 'primary';
-  return (
-    <Card
-      className={cn(
-        'flex flex-col rounded-xl transition-all duration-300 shadow-md hover:shadow-xl hover:-translate-y-1',
-        isRecommended ? 'border-primary ring-2 ring-primary bg-primary/5' : 'border-border bg-card'
-      )}
-    >
-      {isRecommended ? (
+  const isAlternative = recommendationType === 'alternative';
+
+  const getHeader = () => {
+    if (isRecommended) {
+      return (
         <div className="text-center py-2 bg-primary text-primary-foreground font-semibold text-sm rounded-t-xl">
           Recommended for You
         </div>
-      ) : (
-         <div className="text-center py-2 bg-muted text-muted-foreground font-semibold text-sm rounded-t-xl">
+      )
+    }
+    if (isAlternative) {
+      return (
+        <div className="text-center py-2 bg-muted text-muted-foreground font-semibold text-sm rounded-t-xl">
           Also Consider
         </div>
+      )
+    }
+    return null;
+  }
+
+  return (
+    <Card
+      className={cn(
+        'flex flex-col h-full rounded-xl transition-all duration-300 shadow-md hover:shadow-xl hover:-translate-y-1',
+        isRecommended ? 'border-primary ring-2 ring-primary bg-primary/5' : 'border-border bg-card'
       )}
+    >
+      {getHeader()}
       <CardHeader className="items-center text-center pt-6 pb-4">
         <pkg.icon className={cn('h-10 w-10 mb-3', isRecommended ? 'text-primary' : 'text-muted-foreground')} />
         {pkg.badge && (
