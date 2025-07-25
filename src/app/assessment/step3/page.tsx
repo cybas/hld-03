@@ -701,13 +701,27 @@ export default function AssessmentStep3Page() {
 
   const results = assessmentData?.assessmentResults;
 
-  const renderSummary = (summary: SummaryByCategory) => {
-    if (!summary || Object.keys(summary).length === 0) {
+  const renderSummary = (summary: SummaryByCategory | string) => {
+    let summaryObj: SummaryByCategory;
+    
+    if (typeof summary === 'string') {
+        try {
+            summaryObj = JSON.parse(summary);
+        } catch (error) {
+            console.error("Failed to parse summary JSON string:", error);
+            return <p className="text-destructive-foreground">Could not display summary.</p>;
+        }
+    } else {
+        summaryObj = summary;
+    }
+
+    if (!summaryObj || Object.keys(summaryObj).length === 0) {
       return <p className="text-muted-foreground">No items selected.</p>;
     }
+
     return (
       <ul className="space-y-2">
-        {Object.entries(summary).map(([category, items]) => (
+        {Object.entries(summaryObj).map(([category, items]) => (
           <li key={category}>
             <p className="font-semibold text-foreground">{category}:</p>
             <div className="flex flex-wrap gap-2 mt-1">
