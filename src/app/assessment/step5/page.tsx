@@ -117,10 +117,15 @@ export default function AssessmentStep5Page() {
       </div>
 
        <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border shadow-up-md z-10">
-        <div className="container mx-auto px-4 py-3 text-center">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex justify-between items-center">
+            <Button variant="outline" asChild>
+              <Link href="/assessment/step4">Back to Preferences</Link>
+            </Button>
             <Button size="lg" asChild>
               <Link href="/">Finish & Return Home</Link>
             </Button>
+          </div>
         </div>
       </div>
     </>
