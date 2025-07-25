@@ -14,12 +14,15 @@ interface PackageRecommendationsProps {
 }
 
 export function PackageRecommendations({ data }: PackageRecommendationsProps) {
-  const { recommendedId, alternativeIds } = useMemo(
-    () => filterPackages(data.treatmentPreferences!),
-    [data.treatmentPreferences]
-  );
+  const { recommendedId, alternativeIds } = useMemo(() => {
+    if (!data.treatmentPreferences) {
+      // Return default if preferences are missing
+      return { recommendedId: 'starter', alternativeIds: ['essential'] };
+    }
+    return filterPackages(data.treatmentPreferences);
+  }, [data.treatmentPreferences]);
   
-  const recommendedPackage = treatmentPackages[recommendedId];
+  const recommendedPackage = recommendedId ? treatmentPackages[recommendedId] : null;
   const alternativePackages = alternativeIds.map(id => treatmentPackages[id]);
 
   const topFactors = useMemo(() => {
@@ -54,25 +57,19 @@ export function PackageRecommendations({ data }: PackageRecommendationsProps) {
         </CardContent>
       </Card>
       
-      {/* Recommended Package */}
-      <div>
-        <h2 className="text-2xl font-bold text-center mb-4 text-foreground">Our Recommendation For You</h2>
-        <div className="max-w-md mx-auto">
-            {recommendedPackage && <PackageCard pkg={recommendedPackage} isRecommended={true} />}
-        </div>
-      </div>
-      
-      {/* Alternative Packages */}
-      {alternativePackages.length > 0 && (
-        <div>
-          <h3 className="text-xl font-bold text-center mb-4 text-foreground">Also Consider</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            {alternativePackages.map(pkg => (
-              <PackageCard key={pkg.id} pkg={pkg} isRecommended={false} />
-            ))}
+      {/* Packages Section */}
+      <div className="space-y-12">
+        {recommendedPackage && (
+          <div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-sm sm:max-w-none mx-auto">
+              <PackageCard pkg={recommendedPackage} isRecommended={true} recommendationType="primary"/>
+              {alternativePackages.map(pkg => (
+                <PackageCard key={pkg.id} pkg={pkg} isRecommended={false} recommendationType="alternative" />
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Philosophy Section */}
        <Card className="text-center bg-transparent border-none shadow-none">
@@ -86,7 +83,7 @@ export function PackageRecommendations({ data }: PackageRecommendationsProps) {
             <p className="text-muted-foreground text-sm max-w-2xl mx-auto">Our programs are structured around a 100-day cycle. This is because hair growth cycles require at least 3 months to show visible, measurable changes.</p>
           </div>
           <div className="flex gap-4 justify-center pt-4">
-            <Button size="lg">Start with {recommendedPackage.title}</Button>
+            {recommendedPackage && <Button size="lg">Start with {recommendedPackage.title.split('•')[0].trim()}</Button>}
             <Button size="lg" variant="outline">Compare All Packages</Button>
           </div>
         </CardContent>

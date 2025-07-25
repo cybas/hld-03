@@ -3,7 +3,7 @@
 
 import type { TreatmentPackage } from '@/types';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Check, ArrowUpRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
@@ -11,9 +11,11 @@ import Link from 'next/link';
 interface PackageCardProps {
   pkg: TreatmentPackage;
   isRecommended: boolean;
+  recommendationType?: 'primary' | 'alternative';
 }
 
-export function PackageCard({ pkg, isRecommended }: PackageCardProps) {
+export function PackageCard({ pkg, recommendationType = 'alternative' }: PackageCardProps) {
+  const isRecommended = recommendationType === 'primary';
   return (
     <Card
       className={cn(
@@ -21,13 +23,17 @@ export function PackageCard({ pkg, isRecommended }: PackageCardProps) {
         isRecommended ? 'border-primary ring-2 ring-primary bg-primary/5' : 'border-border bg-card'
       )}
     >
-      {isRecommended && (
+      {isRecommended ? (
         <div className="text-center py-2 bg-primary text-primary-foreground font-semibold text-sm rounded-t-xl">
           Recommended for You
         </div>
+      ) : (
+         <div className="text-center py-2 bg-muted text-muted-foreground font-semibold text-sm rounded-t-xl">
+          Also Consider
+        </div>
       )}
-      <CardHeader className="items-center text-center pt-8">
-        <pkg.icon className={cn('h-10 w-10 mb-2', isRecommended ? 'text-primary' : 'text-muted-foreground')} />
+      <CardHeader className="items-center text-center pt-6 pb-4">
+        <pkg.icon className={cn('h-10 w-10 mb-3', isRecommended ? 'text-primary' : 'text-muted-foreground')} />
         {pkg.badge && (
             <span className={cn(
                 'text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full',
@@ -36,11 +42,11 @@ export function PackageCard({ pkg, isRecommended }: PackageCardProps) {
                 {pkg.badge}
             </span>
         )}
-        <CardTitle className="text-xl font-bold text-foreground mt-2">{pkg.title}</CardTitle>
-        <p className="text-muted-foreground text-sm">{pkg.programPrice}</p>
+        <CardTitle className="text-lg font-bold text-foreground mt-2 leading-tight">{pkg.title}</CardTitle>
+        <CardDescription className="text-sm">{pkg.programPrice}</CardDescription>
         <p className="text-2xl font-bold text-foreground">{pkg.price}</p>
       </CardHeader>
-      <CardContent className="flex flex-col flex-grow p-6">
+      <CardContent className="flex flex-col flex-grow p-6 pt-0">
         <ul className="space-y-3 text-sm text-foreground flex-grow mb-6">
           {pkg.features.map((feature, index) => (
             <li key={index} className="flex items-start gap-3">
