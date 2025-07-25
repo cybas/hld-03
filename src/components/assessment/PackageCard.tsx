@@ -4,7 +4,7 @@
 import type { TreatmentPackage } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Check, ArrowUpRight } from 'lucide-react';
+import { Check, ArrowUpRight, Shield, Gem, Hospital, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
@@ -13,9 +13,17 @@ interface PackageCardProps {
   recommendationType?: 'primary' | 'alternative' | 'none';
 }
 
+const icons = {
+  shield: Shield,
+  gem: Gem,
+  hospital: Hospital,
+  star: Star,
+};
+
 export function PackageCard({ pkg, recommendationType = 'none' }: PackageCardProps) {
   const isRecommended = recommendationType === 'primary';
   const isAlternative = recommendationType === 'alternative';
+  const Icon = icons[pkg.icon];
 
   const getHeader = () => {
     if (isRecommended) {
@@ -44,7 +52,7 @@ export function PackageCard({ pkg, recommendationType = 'none' }: PackageCardPro
     >
       {getHeader()}
       <CardHeader className="items-center text-center pt-6 pb-4">
-        <pkg.icon className={cn('h-10 w-10 mb-3', isRecommended ? 'text-primary' : 'text-muted-foreground')} />
+        {Icon && <Icon className={cn('h-10 w-10 mb-3', isRecommended ? 'text-primary' : 'text-muted-foreground')} />}
         {pkg.badge && (
             <span className={cn(
                 'text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full',

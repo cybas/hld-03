@@ -20,7 +20,7 @@ export interface SelectedTag {
 
 export interface TreatmentPackage {
   id: string;
-  icon: React.ElementType;
+  icon: 'shield' | 'gem' | 'hospital' | 'star';
   badge?: 'Most Popular' | 'Best Value' | 'Maximum Results' | 'Balanced Approach';
   title: string;
   price: string;

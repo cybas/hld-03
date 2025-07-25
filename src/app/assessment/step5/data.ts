@@ -1,11 +1,10 @@
 
-import { Shield, Gem, Hospital, Star } from 'lucide-react';
 import type { TreatmentPackage, TreatmentPreferences } from '@/types';
 
 export const treatmentPackages: Record<string, TreatmentPackage> = {
   starter: {
     id: 'starter',
-    icon: Shield,
+    icon: 'shield',
     badge: 'Best Value',
     title: 'Starter Package • 100-Day Home Care',
     price: '€150/month',
@@ -22,7 +21,7 @@ export const treatmentPackages: Record<string, TreatmentPackage> = {
   },
   essential: {
     id: 'essential',
-    icon: Gem,
+    icon: 'gem',
     badge: 'Most Popular',
     title: 'Essential Package • 100-Day Home Boost',
     price: '€300/month',
@@ -39,7 +38,7 @@ export const treatmentPackages: Record<string, TreatmentPackage> = {
   },
   home_clinic_360: {
     id: 'home_clinic_360',
-    icon: Hospital,
+    icon: 'hospital',
     badge: 'Balanced Approach',
     title: 'Home-Clinic 360° • 100-Day',
     price: '€550/month',
@@ -59,7 +58,7 @@ export const treatmentPackages: Record<string, TreatmentPackage> = {
   },
   intensive: {
     id: 'intensive',
-    icon: Star,
+    icon: 'star',
     badge: 'Maximum Results',
     title: 'Intensive 360° • 100-Day Clinic + Home',
     price: '€1000/month',
