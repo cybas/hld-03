@@ -20,7 +20,7 @@ const LoadingSkeleton = () => (
 );
 
 const scarringKeywords = ['Scarring', 'Cicatricial', 'Frontal Fibrosing', 'Lichen Planopilaris', 'Dissecting Cellulitis', 'CCCA'];
-const otherSpecialistKeywords = ['Trichotillomania', 'Anagen Effluvium', 'Chemotherapy-Induced Alopecia'];
+const specialistOnlyKeywords = ['Trichotillomania', 'Anagen Effluvium', 'Chemotherapy-Induced Alopecia'];
 
 export default function AssessmentStep5Page() {
   const [data, setData] = useState<AssessmentData | null>(null);
@@ -48,21 +48,20 @@ export default function AssessmentStep5Page() {
       const classification = assessmentData.assessmentResults.classification || '';
       const selectedImages = assessmentData.selectedImages;
 
-      // Check 1: Explicit scarring classification from AI
+      // Check 1: AI classification points to a scarring type.
       const hasScarringClassification = scarringKeywords.some(keyword => classification.includes(keyword));
       
-      // Check 2: Selected images that are always specialist-level
+      // Check 2: User selected an image that represents a scarring or other specialist-level condition.
       const hasSpecialistImage = selectedImages.some(img => 
         scarringKeywords.some(keyword => img.description.includes(keyword)) ||
-        otherSpecialistKeywords.some(keyword => img.description.includes(keyword))
+        specialistOnlyKeywords.some(keyword => img.description.includes(keyword))
       );
 
-      // Check 3: Advanced AGA (Stage 4+)
+      // Check 3: User selected an image representing advanced AGA (Stage 4 or higher).
       const hasAdvancedAGA = selectedImages.some(img => 
-          (img.description.includes('AGA - Stage 4') || 
-           img.description.includes('AGA - Stage 5') ||
-           img.description.includes('AGA - Stage 5 or 6') ||
-           img.description.includes('AGA - Stage 3 vertex or 4'))
+          (img.description.includes('Stage 4') || 
+           img.description.includes('Stage 5') ||
+           img.description.includes('Stage 5 or 6'))
       );
 
       if (hasScarringClassification || hasSpecialistImage || hasAdvancedAGA) {
@@ -94,10 +93,6 @@ export default function AssessmentStep5Page() {
             <span className="mx-2">/</span>
             <span>Step 5 of 5</span>
           </div>
-           <Link href="/assessment/step4" className="flex items-center text-primary hover:underline">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Preferences
-          </Link>
         </div>
         <Progress value={100} className="w-full mb-6" />
 
