@@ -61,17 +61,17 @@ export function PackageRecommendations({ data }: PackageRecommendationsProps) {
       <div className="space-y-12">
         {recommendedPackage ? (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
-                {/* Recommended Package */}
-                <div className="lg:col-span-1">
-                    <PackageCard pkg={recommendedPackage} recommendationType="primary"/>
-                </div>
+              {/* Recommended Package */}
+              <div className="lg:col-span-1">
+                  <PackageCard pkg={recommendedPackage} recommendationType="primary"/>
+              </div>
 
-                {/* Alternative Packages */}
-                {alternativePackages.map(pkg => (
-                    <div key={pkg.id} className="lg:col-span-1">
-                        <PackageCard pkg={pkg} recommendationType="alternative" />
-                    </div>
-                ))}
+              {/* Alternative Packages */}
+              {alternativePackages.map(pkg => (
+                  <div key={pkg.id} className="lg:col-span-1">
+                      <PackageCard pkg={pkg} recommendationType="alternative" />
+                  </div>
+              ))}
             </div>
         ) : (
            <div className="text-center py-12">

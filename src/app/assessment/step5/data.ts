@@ -106,7 +106,7 @@ export const filterPackages = (preferences: TreatmentPreferences): { recommended
 
   // Filter out clinic packages if user prefers home-only OR is outside UAE
   if (preferences.clinicVisits === 'No clinic visits - home treatment only' || preferences.location !== 'UAE (Dubai, Abu Dhabi, Al Ain)') {
-    finalFiltered = budgetFiltered.filter(pkgId => !['home_clinic_360', 'intensive'].includes(pkgId));
+    finalFiltered = finalFiltered.filter(pkgId => !['home_clinic_360', 'intensive'].includes(pkgId));
   }
   
   // Fallback logic: If filters result in an empty list (e.g., low budget but wants clinic),
