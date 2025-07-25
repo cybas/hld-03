@@ -17,7 +17,7 @@ export function PackageRecommendations({ data }: PackageRecommendationsProps) {
   const { recommendedId, alternativeIds } = useMemo(() => {
     if (!data.treatmentPreferences) {
       // Return default if preferences are missing
-      return { recommendedId: 'starter', alternativeIds: ['essential'] };
+      return { recommendedId: 'essential', alternativeIds: ['starter'] };
     }
     return filterPackages(data.treatmentPreferences);
   }, [data.treatmentPreferences]);
@@ -60,13 +60,11 @@ export function PackageRecommendations({ data }: PackageRecommendationsProps) {
       {/* Packages Section */}
       <div className="space-y-12">
         {recommendedPackage && (
-          <div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-sm sm:max-w-none mx-auto">
-              <PackageCard pkg={recommendedPackage} isRecommended={true} recommendationType="primary"/>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-sm mx-auto md:max-w-none">
+              <PackageCard pkg={recommendedPackage} recommendationType="primary"/>
               {alternativePackages.map(pkg => (
-                <PackageCard key={pkg.id} pkg={pkg} isRecommended={false} recommendationType="alternative" />
+                <PackageCard key={pkg.id} pkg={pkg} recommendationType="alternative" />
               ))}
-            </div>
           </div>
         )}
       </div>
@@ -83,8 +81,8 @@ export function PackageRecommendations({ data }: PackageRecommendationsProps) {
             <p className="text-muted-foreground text-sm max-w-2xl mx-auto">Our programs are structured around a 100-day cycle. This is because hair growth cycles require at least 3 months to show visible, measurable changes.</p>
           </div>
           <div className="flex gap-4 justify-center pt-4">
-            {recommendedPackage && <Button size="lg">Start with {recommendedPackage.title.split('•')[0].trim()}</Button>}
-            <Button size="lg" variant="outline">Compare All Packages</Button>
+            {recommendedPackage && <Button size="lg" asChild><Link href={recommendedPackage.detailsUrl} target="_blank">Start with {recommendedPackage.title.split('•')[0].trim()}</Link></Button>}
+            <Button size="lg" variant="outline" asChild><Link href="#">Compare All Packages</Link></Button>
           </div>
         </CardContent>
       </Card>

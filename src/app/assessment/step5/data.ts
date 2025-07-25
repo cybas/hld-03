@@ -40,6 +40,7 @@ export const treatmentPackages: Record<string, TreatmentPackage> = {
   home_clinic_360: {
     id: 'home_clinic_360',
     icon: Hospital,
+    badge: 'Balanced Approach',
     title: 'Home-Clinic 360° • 100-Day',
     price: '€550/month',
     programPrice: '€1599 for complete 100-day program',
