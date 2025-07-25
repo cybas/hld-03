@@ -114,8 +114,14 @@ export const filterPackages = (preferences: TreatmentPreferences): { recommended
 
   // If no packages match (e.g., low budget but wants clinic), default to best available home care
   if (locationFiltered.length === 0) {
-      if (budgetFiltered.includes('essential')) locationFiltered = ['essential', 'starter'];
-      else locationFiltered = ['starter'];
+      if (budgetFiltered.includes('essential')) {
+          locationFiltered = ['essential', 'starter'];
+      } else if (budgetFiltered.includes('starter')) {
+          locationFiltered = ['starter'];
+      } else {
+          // Fallback if no budget-friendly home options available
+          locationFiltered = ['starter'];
+      }
   }
 
   const recommendedId = locationFiltered.length > 0 ? locationFiltered[0] : null;
