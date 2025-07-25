@@ -19,8 +19,16 @@ const LoadingSkeleton = () => (
     </div>
 );
 
-const scarringKeywords = ['Scarring', 'Cicatricial', 'Frontal Fibrosing', 'Lichen Planopilaris', 'Dissecting Cellulitis', 'CCCA'];
-const specialistOnlyKeywords = ['Trichotillomania', 'Anagen Effluvium', 'Chemotherapy-Induced Alopecia'];
+// Keywords for conditions that ALWAYS require a specialist
+const specialistKeywords = [
+    'Frontal Fibrosing', 
+    'Lichen Planopilaris', 
+    'Dissecting Cellulitis', 
+    'CCCA', // Central Centrifugal Cicatricial Alopecia
+    'Trichotillomania', 
+    'Anagen Effluvium', 
+    'Chemotherapy-Induced Alopecia'
+];
 
 export default function AssessmentStep5Page() {
   const [data, setData] = useState<AssessmentData | null>(null);
@@ -44,21 +52,21 @@ export default function AssessmentStep5Page() {
       
       setData(assessmentData);
 
-      // Corrected Conditional Logic
       const classification = assessmentData.assessmentResults.classification || '';
       const selectedImages = assessmentData.selectedImages;
 
-      // Check 1: AI classification points to a scarring type.
-      const hasScarringClassification = scarringKeywords.some(keyword => classification.includes(keyword));
+      // Check 1: AI classification is 'Permanent Scarring'.
+      const hasScarringClassification = classification === 'Permanent Scarring';
       
-      // Check 2: User selected an image that represents a scarring or other specialist-level condition.
+      // Check 2: User selected an image description that contains a keyword for a specialist-only condition.
       const hasSpecialistImage = selectedImages.some(img => 
-        scarringKeywords.some(keyword => img.description.includes(keyword)) ||
-        specialistOnlyKeywords.some(keyword => img.description.includes(keyword))
+        specialistKeywords.some(keyword => img.description.includes(keyword))
       );
 
       // Check 3: User selected an image representing advanced AGA (Stage 4 or higher).
+      // This logic correctly identifies "Stage 4", "Stage 5", "Stage 5 or 6" etc.
       const hasAdvancedAGA = selectedImages.some(img => 
+          img.description.includes('AGA') &&
           (img.description.includes('Stage 4') || 
            img.description.includes('Stage 5') ||
            img.description.includes('Stage 5 or 6'))
