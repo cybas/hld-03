@@ -10,7 +10,6 @@ import Link from 'next/link';
 
 interface PackageCardProps {
   pkg: TreatmentPackage;
-  isRecommended: boolean;
   recommendationType?: 'primary' | 'alternative';
 }
 

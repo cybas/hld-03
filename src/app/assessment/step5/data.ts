@@ -87,16 +87,16 @@ export const filterPackages = (preferences: TreatmentPreferences): { recommended
       budgetFiltered = ['starter'];
       break;
     case '€200-€400/month':
-      budgetFiltered = ['essential', 'starter'];
+      budgetFiltered = ['starter', 'essential'];
       break;
     case '€400-€700/month':
-      budgetFiltered = ['home_clinic_360', 'essential', 'starter'];
+      budgetFiltered = ['starter', 'essential', 'home_clinic_360'];
       break;
     case '€700+ per month':
-      budgetFiltered = ['intensive', 'home_clinic_360', 'essential'];
+      budgetFiltered = ['essential', 'home_clinic_360', 'intensive'];
       break;
     case 'Budget is not a primary concern':
-      budgetFiltered = ['intensive', 'home_clinic_360', 'essential', 'starter'];
+      budgetFiltered = ['home_clinic_360', 'intensive', 'essential', 'starter'];
       break;
     default:
       budgetFiltered = ['starter', 'essential', 'home_clinic_360', 'intensive'];

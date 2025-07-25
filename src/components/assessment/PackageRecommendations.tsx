@@ -60,12 +60,17 @@ export function PackageRecommendations({ data }: PackageRecommendationsProps) {
       {/* Packages Section */}
       <div className="space-y-12">
         {recommendedPackage && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-sm mx-auto md:max-w-none">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
               <PackageCard pkg={recommendedPackage} recommendationType="primary"/>
               {alternativePackages.map(pkg => (
                 <PackageCard key={pkg.id} pkg={pkg} recommendationType="alternative" />
               ))}
           </div>
+        )}
+        {!recommendedPackage && (
+           <div className="text-center py-12">
+              <p className="text-lg text-muted-foreground">No packages match your specific criteria. Please adjust your preferences or contact us for a custom plan.</p>
+           </div>
         )}
       </div>
 
