@@ -59,20 +59,21 @@ export function PackageRecommendations({ data }: PackageRecommendationsProps) {
       
       {/* Packages Section */}
       <div className="space-y-12">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
-            {recommendedPackage && (
-              <div className="lg:col-span-1">
-                <PackageCard pkg={recommendedPackage} recommendationType="primary"/>
-              </div>
-            )}
-            {alternativePackages.map(pkg => (
-              <div key={pkg.id} className="lg:col-span-1">
-                <PackageCard pkg={pkg} recommendationType="alternative" />
-              </div>
-            ))}
-        </div>
+        {recommendedPackage ? (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+                {/* Recommended Package */}
+                <div className="lg:col-span-1">
+                    <PackageCard pkg={recommendedPackage} recommendationType="primary"/>
+                </div>
 
-        {!recommendedPackage && (
+                {/* Alternative Packages */}
+                {alternativePackages.map(pkg => (
+                    <div key={pkg.id} className="lg:col-span-1">
+                        <PackageCard pkg={pkg} recommendationType="alternative" />
+                    </div>
+                ))}
+            </div>
+        ) : (
            <div className="text-center py-12">
               <p className="text-lg text-muted-foreground">No packages match your specific criteria. Please adjust your preferences or contact us for a custom plan.</p>
            </div>
