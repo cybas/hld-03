@@ -69,7 +69,6 @@ export default function AssessmentStep3Page() {
     try {
       const data: AssessmentData = JSON.parse(storedDataString);
       
-      // If results are already generated, use them. Otherwise, generate them.
       if (data.assessmentResults && data.assessmentResults.conditionName) {
         setAssessmentData(data);
         setIsLoading(false);
@@ -78,31 +77,37 @@ export default function AssessmentStep3Page() {
       
       const { selectedImages, selectedTags } = data;
 
+      const unspecifiedResults = {
+        conditionName: "Unspecified Hair Loss",
+        commonName: "Pattern needs further evaluation",
+        scarring: "Unknown",
+        severity: "Assessment incomplete",
+        duration: "variable",
+        treatmentSuitability: "maybe (need consultation)",
+        recommendations: [],
+        generatedAt: new Date().toISOString(),
+      };
+
       if (!selectedImages || selectedImages.length === 0) {
-        // Handle case where no images are selected
-        const results = {
-          conditionName: "Unspecified Hair Loss",
-          commonName: "Pattern needs further evaluation",
-          scarring: "Unknown",
-          severity: "Assessment incomplete",
-          duration: "variable",
-          treatmentSuitability: "maybe (need consultation)",
-          recommendations: [],
-          generatedAt: new Date().toISOString(),
-        };
-        const finalData = { ...data, assessmentResults: results, currentStep: 3 };
+        const finalData = { ...data, assessmentResults: unspecifiedResults, currentStep: 3 };
         setAssessmentData(finalData);
         sessionStorage.setItem('assessmentData', JSON.stringify(finalData));
         setIsLoading(false);
         return;
       }
 
-      // 1. Map selected images to conditions
       const identifiedConditions = selectedImages
         .map(image => CONDITION_MAPPING[image.description])
         .filter(Boolean);
+      
+      if (identifiedConditions.length === 0) {
+          const finalData = { ...data, assessmentResults: unspecifiedResults, currentStep: 3 };
+          setAssessmentData(finalData);
+          sessionStorage.setItem('assessmentData', JSON.stringify(finalData));
+          setIsLoading(false);
+          return;
+      }
 
-      // Handle conflicting conditions edge case
       if (identifiedConditions.length > 3) {
         const results = {
           conditionName: "Multiple Hair Loss Types",
@@ -121,7 +126,6 @@ export default function AssessmentStep3Page() {
         return;
       }
 
-      // 2. Determine Primary Condition
       let primaryCondition = identifiedConditions[0];
       if (identifiedConditions.length > 1) {
         primaryCondition = identifiedConditions.reduce((primary, current) => {
@@ -129,11 +133,10 @@ export default function AssessmentStep3Page() {
           if (!current.scarring && primary.scarring) return primary;
           if (current.duration === 'permanent' && primary.duration !== 'permanent') return current;
           if (current.duration !== 'permanent' && primary.duration === 'permanent') return primary;
-          return primary; // Default to first one if equal priority
+          return primary;
         });
       }
       
-      // 3. Determine Severity (based on the most severe selected image)
       const severities = selectedImages
         .map(image => SEVERITY_MAPPING[image.description])
         .filter(Boolean);
@@ -142,7 +145,6 @@ export default function AssessmentStep3Page() {
         ? severities.reduce((max, current) => current.stage > max.stage ? current : max)
         : { severity: "Mild", stage: 1, scale: "N/A" };
 
-      // 4. Calculate Treatment Suitability
       const getTreatmentSuitability = (condition: any, severity: any) => {
         if (condition.scarring) return "maybe (need consultation)";
         if (condition.id === "trichotillomania") return "maybe (need consultation)";
@@ -158,7 +160,6 @@ export default function AssessmentStep3Page() {
           return { ...details, tag: tag.tag, category: tag.category };
       }) || [];
 
-      // Final results object
       const finalResults = {
         conditionName: primaryCondition.name,
         commonName: primaryCondition.commonName,
@@ -365,5 +366,3 @@ export default function AssessmentStep3Page() {
     </>
   );
 }
-
-    
