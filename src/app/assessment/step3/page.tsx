@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import type { AssessmentData, RecommendationDetail, SummaryByCategory } from '@/types';
-import { ArrowLeft, Lightbulb, CheckCircle2, ShieldAlert, BookOpen, Crown, Pilcrow } from 'lucide-react';
+import { ArrowLeft, Lightbulb, CheckCircle2, ShieldAlert, BookOpen, Crown, Pilcrow, Mail, FileText, Loader, CheckCircle, Shield } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { CONDITION_MAPPING, SEVERITY_MAPPING } from './data';
@@ -57,6 +57,12 @@ export default function AssessmentStep3Page() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // State for PDF generation
+  const [emailAddress, setEmailAddress] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
+
   useEffect(() => {
     document.title = 'HairlossDoctor.AI Assessment Results - Step 3/5';
     const storedDataString = sessionStorage.getItem('assessmentData');
@@ -69,7 +75,6 @@ export default function AssessmentStep3Page() {
     try {
       const data: AssessmentData = JSON.parse(storedDataString);
       
-      // If results are already generated, don't re-run logic
       if (data.assessmentResults && data.assessmentResults.conditionName) {
         setAssessmentData(data);
         setIsLoading(false);
@@ -102,12 +107,21 @@ export default function AssessmentStep3Page() {
         .map(image => CONDITION_MAPPING[image.description])
         .filter(Boolean);
       
-      if (identifiedConditions.length === 0) {
-          const finalData = { ...data, assessmentResults: unspecifiedResults, currentStep: 3 };
-          setAssessmentData(finalData);
-          sessionStorage.setItem('assessmentData', JSON.stringify(finalData));
-          setIsLoading(false);
-          return;
+      const primaryCondition = identifiedConditions.length > 0 ? identifiedConditions.reduce((primary, current) => {
+        if (!primary) return current;
+        if (current.scarring && !primary.scarring) return current;
+        if (!current.scarring && primary.scarring) return primary;
+        if (current.duration === 'permanent' && primary.duration !== 'permanent') return current;
+        if (current.duration !== 'permanent' && primary.duration === 'permanent') return primary;
+        return primary;
+      }) : null;
+
+      if (!primaryCondition) {
+        const finalData = { ...data, assessmentResults: unspecifiedResults, currentStep: 3 };
+        setAssessmentData(finalData);
+        sessionStorage.setItem('assessmentData', JSON.stringify(finalData));
+        setIsLoading(false);
+        return;
       }
 
       if (identifiedConditions.length > 3) {
@@ -128,15 +142,6 @@ export default function AssessmentStep3Page() {
         setIsLoading(false);
         return;
       }
-
-      const primaryCondition = identifiedConditions.reduce((primary, current) => {
-        if (!primary) return current;
-        if (current.scarring && !primary.scarring) return current;
-        if (!current.scarring && primary.scarring) return primary;
-        if (current.duration === 'permanent' && primary.duration !== 'permanent') return current;
-        if (current.duration !== 'permanent' && primary.duration === 'permanent') return primary;
-        return primary;
-      });
       
       const severities = selectedImages
         .map(image => SEVERITY_MAPPING[image.description])
@@ -146,11 +151,6 @@ export default function AssessmentStep3Page() {
         ? severities.reduce((max, current) => (current.stage > max.stage ? current : max), severities[0])
         : { severity: "Mild", stage: 1, scale: "N/A" };
       
-      if (!primaryCondition) {
-        setAssessmentData({ ...data, assessmentResults: unspecifiedResults, currentStep: 3 });
-        setIsLoading(false);
-        return;
-      }
 
       const getTreatmentSuitability = (condition: any, severity: any) => {
         if (condition.scarring) return "maybe (need consultation)";
@@ -198,6 +198,47 @@ export default function AssessmentStep3Page() {
       setIsLoading(false);
     }
   }, []);
+
+  const handleGeneratePDF = async () => {
+    if (!assessmentData) return;
+    
+    // Validate email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailAddress)) {
+      setEmailError('Please enter a valid email address');
+      return;
+    }
+    
+    setEmailError('');
+    setIsGeneratingPDF(true);
+    setEmailSent(false);
+    
+    try {
+      const response = await fetch('/api/generate-report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          assessmentData,
+          email: emailAddress,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send report');
+      }
+
+      await response.json();
+      
+      setEmailSent(true);
+      
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      setEmailError('Failed to send report. Please try again.');
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
 
   const results = assessmentData?.assessmentResults;
 
@@ -320,6 +361,72 @@ export default function AssessmentStep3Page() {
               </Card>
             </div>
             
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-200">
+              <div className="flex items-start gap-4">
+                <Mail className="w-8 h-8 text-primary flex-shrink-0 mt-1" />
+                <div className="flex-1">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                    Get Your Complete Assessment Report
+                  </h3>
+                  <p className="text-muted-foreground mb-4">
+                    Receive a detailed PDF summary of your hair loss assessment, including personalized recommendations and action steps you can share with your doctor or refer to later.
+                  </p>
+                  
+                  <div className="flex flex-col sm:flex-row gap-3 items-start">
+                    <div className="flex-1 w-full sm:w-auto">
+                      <Input
+                        type="email"
+                        placeholder="Enter your email address"
+                        value={emailAddress}
+                        onChange={(e) => setEmailAddress(e.target.value)}
+                        className="w-full px-4 py-3 border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                        required
+                      />
+                      {emailError && (
+                        <p className="text-red-500 text-sm mt-1">{emailError}</p>
+                      )}
+                    </div>
+                    
+                    <Button
+                      onClick={handleGeneratePDF}
+                      disabled={isGeneratingPDF || !emailAddress}
+                      className="px-6 py-3 font-medium rounded-lg flex items-center gap-2 whitespace-nowrap"
+                    >
+                      {isGeneratingPDF ? (
+                        <>
+                          <Loader className="w-4 h-4 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <FileText className="w-4 h-4" />
+                          Email My Report
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                  
+                  {emailSent && (
+                    <div className="mt-3 p-3 bg-green-100 border border-green-200 rounded-lg">
+                      <div className="flex items-center gap-2 text-green-800">
+                        <CheckCircle className="w-4 h-4" />
+                        <span className="text-sm font-medium">
+                          Assessment report sent to {emailAddress}! Check your inbox.
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="mt-3 text-xs text-gray-500">
+                    <div className="flex items-center gap-1">
+                      <Shield className="w-3 h-3" />
+                      <span>Your email is secure and will only be used to send your report and helpful hair care tips.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2"><BookOpen size={20} /> Detailed Recommendations</CardTitle>
