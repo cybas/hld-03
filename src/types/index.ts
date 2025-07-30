@@ -41,10 +41,20 @@ export interface RecommendationDetail {
 }
 
 export interface AssessmentResults {
-  classification: 'Temporary' | 'Permanent Non-Scarring' | 'Permanent Scarring' | 'Unknown';
-  severity: 'Mild' | 'Mild to Moderate' | 'Moderate' | 'Moderate to Severe' | 'Severe' | 'Unknown';
-  selectedImageSummary: SummaryByCategory | string;
-  contributingFactorsSummary: SummaryByCategory | string;
+  // Old fields, will be phased out or used as fallback
+  classification?: 'Temporary' | 'Permanent Non-Scarring' | 'Permanent Scarring' | 'Unknown';
+  severity?: 'Mild' | 'Mild to Moderate' | 'Moderate' | 'Moderate to Severe' | 'Severe' | 'Unknown' | 'Normal' | 'Advanced' | 'Complete' | 'Early' | 'Assessment incomplete' | 'Variable';
+  selectedImageSummary?: SummaryByCategory | string;
+  contributingFactorsSummary?: SummaryByCategory | string;
+  
+  // New detailed fields
+  conditionName?: string;
+  commonName?: string;
+  scarring?: 'Yes' | 'No' | 'Unknown' | 'Mixed';
+  duration?: 'temporary' | 'permanent' | 'variable';
+  treatmentSuitability?: 'yes' | 'no' | 'maybe (need consultation)';
+
+  // Maintained fields
   recommendations: RecommendationDetail[];
   generatedAt: string;
 }
