@@ -69,6 +69,7 @@ export default function AssessmentStep3Page() {
     try {
       const data: AssessmentData = JSON.parse(storedDataString);
       
+      // If results are already generated, don't re-run logic
       if (data.assessmentResults && data.assessmentResults.conditionName) {
         setAssessmentData(data);
         setIsLoading(false);
@@ -78,12 +79,13 @@ export default function AssessmentStep3Page() {
       const { selectedImages, selectedTags } = data;
 
       const unspecifiedResults = {
+        conditionId: "unspecified",
         conditionName: "Unspecified Hair Loss",
         commonName: "Pattern needs further evaluation",
-        scarring: "Unknown",
-        severity: "Assessment incomplete",
-        duration: "variable",
-        treatmentSuitability: "maybe (need consultation)",
+        scarring: "Unknown" as const,
+        severity: "Assessment incomplete" as const,
+        duration: "variable" as const,
+        treatmentSuitability: "maybe (need consultation)" as const,
         recommendations: [],
         generatedAt: new Date().toISOString(),
       };
@@ -110,12 +112,13 @@ export default function AssessmentStep3Page() {
 
       if (identifiedConditions.length > 3) {
         const results = {
+          conditionId: "multiple",
           conditionName: "Multiple Hair Loss Types",
           commonName: "Complex presentation",
-          scarring: "Mixed",
-          severity: "Variable",
-          duration: "variable",
-          treatmentSuitability: "maybe (need consultation)",
+          scarring: "Mixed" as const,
+          severity: "Variable" as const,
+          duration: "variable" as const,
+          treatmentSuitability: "maybe (need consultation)" as const,
           recommendations: [],
           generatedAt: new Date().toISOString(),
         };
@@ -126,24 +129,28 @@ export default function AssessmentStep3Page() {
         return;
       }
 
-      let primaryCondition = identifiedConditions[0];
-      if (identifiedConditions.length > 1) {
-        primaryCondition = identifiedConditions.reduce((primary, current) => {
-          if (current.scarring && !primary.scarring) return current;
-          if (!current.scarring && primary.scarring) return primary;
-          if (current.duration === 'permanent' && primary.duration !== 'permanent') return current;
-          if (current.duration !== 'permanent' && primary.duration === 'permanent') return primary;
-          return primary;
-        });
-      }
+      const primaryCondition = identifiedConditions.reduce((primary, current) => {
+        if (!primary) return current;
+        if (current.scarring && !primary.scarring) return current;
+        if (!current.scarring && primary.scarring) return primary;
+        if (current.duration === 'permanent' && primary.duration !== 'permanent') return current;
+        if (current.duration !== 'permanent' && primary.duration === 'permanent') return primary;
+        return primary;
+      });
       
       const severities = selectedImages
         .map(image => SEVERITY_MAPPING[image.description])
         .filter(Boolean);
       
-      let primarySeverity = severities.length > 0
-        ? severities.reduce((max, current) => current.stage > max.stage ? current : max)
+      const primarySeverity = severities.length > 0
+        ? severities.reduce((max, current) => (current.stage > max.stage ? current : max), severities[0])
         : { severity: "Mild", stage: 1, scale: "N/A" };
+      
+      if (!primaryCondition) {
+        setAssessmentData({ ...data, assessmentResults: unspecifiedResults, currentStep: 3 });
+        setIsLoading(false);
+        return;
+      }
 
       const getTreatmentSuitability = (condition: any, severity: any) => {
         if (condition.scarring) return "maybe (need consultation)";
@@ -161,10 +168,11 @@ export default function AssessmentStep3Page() {
       }) || [];
 
       const finalResults = {
+        conditionId: primaryCondition.id,
         conditionName: primaryCondition.name,
         commonName: primaryCondition.commonName,
-        scarring: primaryCondition.scarring ? 'Yes' : 'No',
-        severity: primarySeverity.severity,
+        scarring: (primaryCondition.scarring ? 'Yes' : 'No') as 'Yes' | 'No',
+        severity: primarySeverity.severity as any,
         duration: primaryCondition.duration,
         treatmentSuitability: treatmentSuitability,
         selectedImageSummary: data.selectedImages.reduce((acc, img) => {

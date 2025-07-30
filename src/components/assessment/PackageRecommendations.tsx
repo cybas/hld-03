@@ -1,87 +1,73 @@
 
 'use client';
 
-import { treatmentPackages, filterPackages } from '@/app/assessment/step5/data';
+import { PACKAGES } from '@/app/assessment/step5/data';
 import type { AssessmentData } from '@/types';
 import { PackageCard } from './PackageCard';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { useMemo } from 'react';
 
 interface PackageRecommendationsProps {
   data: AssessmentData;
+  recommendations: {
+    type: string;
+    recommendedId: string | null;
+    alternativeIds: string[];
+  }
 }
 
-export function PackageRecommendations({ data }: PackageRecommendationsProps) {
-  const { recommendedId, alternativeIds } = useMemo(() => {
-    if (!data.treatmentPreferences) {
-      // Return default if preferences are missing
-      return { recommendedId: 'essential', alternativeIds: ['starter', 'home_clinic_360'] };
-    }
-    return filterPackages(data.treatmentPreferences);
-  }, [data.treatmentPreferences]);
-  
-  const recommendedPackage = recommendedId ? treatmentPackages[recommendedId] : null;
-  const alternativePackages = alternativeIds.map(id => treatmentPackages[id]);
+export function PackageRecommendations({ data, recommendations }: PackageRecommendationsProps) {
+  const recommendedPackage = recommendations.recommendedId ? PACKAGES[recommendations.recommendedId] : null;
+  const alternativePackages = recommendations.alternativeIds.map(id => PACKAGES[id]);
 
-  const topFactors = useMemo(() => {
-    if (!data.selectedTags) return [];
-    return data.selectedTags.slice(0, 3).map(tag => tag.tag);
-  }, [data.selectedTags]);
+  if (!data.assessmentResults || !data.treatmentPreferences) {
+    return <div>Loading preferences...</div>;
+  }
 
   return (
-    <div className="space-y-8">
-      {/* Assessment Summary */}
-      <Card className="bg-muted/50">
-        <CardHeader>
-          <CardTitle>Your Assessment Summary</CardTitle>
+    <div className="space-y-12">
+      <Card className="bg-blue-50 rounded-lg p-6 mb-8 border-blue-200">
+        <CardHeader className="p-0 pb-4">
+            <CardTitle className="text-lg font-semibold">Your Assessment Summary</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+        <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm p-0">
           <div>
-            <p className="font-semibold text-muted-foreground">Hair Loss Type:</p>
-            <p className="font-bold text-lg text-primary">{data.assessmentResults?.classification}</p>
+            <span className="text-gray-600">Hair Loss Type:</span>
+            <p className="font-medium text-foreground">{data.assessmentResults.conditionName}</p>
           </div>
           <div>
-            <p className="font-semibold text-muted-foreground">Severity Level:</p>
-            <p className="font-bold text-lg text-primary">{data.assessmentResults?.severity}</p>
+            <span className="text-gray-600">Severity:</span>
+            <p className="font-medium text-foreground">{data.assessmentResults.severity}</p>
           </div>
-          <div className="md:col-span-2">
-            <p className="font-semibold text-muted-foreground">Key Contributing Factors:</p>
-            <p className="text-foreground">{topFactors.join(', ') || 'None specified'}</p>
+          <div>
+            <span className="text-gray-600">Budget:</span>
+            <p className="font-medium text-foreground">{data.treatmentPreferences.monthlyBudget}</p>
           </div>
-           <div>
-            <p className="font-semibold text-muted-foreground">Treatment Approach:</p>
-            <p className="text-foreground">Non-surgical, evidence-based protocol</p>
+          <div>
+            <span className="text-gray-600">Treatment Approach:</span>
+            <p className="font-medium text-foreground">{data.treatmentPreferences.treatmentIntensity}</p>
           </div>
         </CardContent>
       </Card>
       
-      {/* Packages Section */}
-      <div className="space-y-12">
-        {recommendedPackage ? (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
-              {/* Recommended Package */}
-              <div className="lg:col-span-1">
-                  <PackageCard pkg={recommendedPackage} recommendationType="primary"/>
-              </div>
-
-              {/* Alternative Packages */}
-              {alternativePackages.map(pkg => (
-                  <div key={pkg.id} className="lg:col-span-1">
-                      <PackageCard pkg={pkg} recommendationType="alternative" />
-                  </div>
-              ))}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        {recommendedPackage && (
+            <div className="lg:col-span-1">
+                <PackageCard pkg={recommendedPackage} recommendationType="primary"/>
             </div>
-        ) : (
-           <div className="text-center py-12">
-              <p className="text-lg text-muted-foreground">No packages match your specific criteria. Please adjust your preferences or contact us for a custom plan.</p>
-           </div>
         )}
+        
+        {alternativePackages.map(pkg => (
+            pkg && (
+                <div key={pkg.id} className="lg:col-span-1">
+                    <PackageCard pkg={pkg} recommendationType="alternative" />
+                </div>
+            )
+        ))}
       </div>
 
-      {/* Philosophy Section */}
-       <Card className="text-center bg-transparent border-none shadow-none">
+      <Card className="text-center bg-gray-50 rounded-lg p-6 border border-gray-200">
         <CardContent className="space-y-4 pt-6">
           <div>
             <h4 className="font-semibold text-foreground">Our Treatment Philosophy</h4>
@@ -93,7 +79,7 @@ export function PackageRecommendations({ data }: PackageRecommendationsProps) {
           </div>
           <div className="flex gap-4 justify-center pt-4">
             {recommendedPackage && <Button size="lg" asChild><Link href={recommendedPackage.detailsUrl} target="_blank">Start with {recommendedPackage.title.split('•')[0].trim()}</Link></Button>}
-            <Button size="lg" variant="outline" asChild><Link href="#">Compare All Packages</Link></Button>
+            <Button size="lg" variant="outline" asChild><Link href="/packages">Compare All Packages</Link></Button>
           </div>
         </CardContent>
       </Card>

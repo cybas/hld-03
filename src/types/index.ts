@@ -45,6 +45,7 @@ export interface AssessmentResults {
   classification?: 'Temporary' | 'Permanent Non-Scarring' | 'Permanent Scarring' | 'Unknown';
   
   // New detailed fields
+  conditionId?: string; // Add conditionId
   conditionName?: string;
   commonName?: string;
   scarring?: 'Yes' | 'No' | 'Unknown' | 'Mixed';
