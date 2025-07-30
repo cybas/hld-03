@@ -26,7 +26,8 @@ export const CONDITION_MAPPING: Record<string, { id: string; name: string; commo
   'Alopecia Totalis - Complete scalp loss': { id: "alopecia_totalis", name: "Alopecia Totalis", commonName: "Complete Scalp Hair Loss", scarring: false, duration: "variable" },
   'Alopecia Universalis - Total body hair loss': { id: "alopecia_universalis", name: "Alopecia Universalis", commonName: "Total Body Hair Loss", scarring: false, duration: "variable" },
   'Alopecia Barbae - Patchy beard loss': { id: "alopecia_barbae", name: "Alopecia Barbae", commonName: "Beard Hair Loss", scarring: false, duration: "variable" },
-  
+  'Diffuse Alopecia - Overall thinning': { id: "diffuse_alopecia_areata", name: "Diffuse Alopecia Areata", commonName: "Overall Thinning", scarring: false, duration: "variable" },
+
   // Telogen Effluvium
   'Telogen Effluvium - Stress-related shedding': { id: "telogen_effluvium", name: "Telogen Effluvium", commonName: "Stress-Related Hair Loss", scarring: false, duration: "temporary" },
   'Telogen Effluvium - Diffuse shedding': { id: "telogen_effluvium", name: "Telogen Effluvium", commonName: "Stress-Related Hair Loss", scarring: false, duration: "temporary" },
