@@ -42,7 +42,7 @@ const LoadingSkeleton = () => (
     <Card>
       <CardHeader>
         <Skeleton className="h-6 w-1/3" />
-      </Header>
+      </CardHeader>
       <CardContent className="space-y-4">
         <Skeleton className="h-8 w-full" />
         <Skeleton className="h-8 w-full" />
@@ -365,3 +365,5 @@ export default function AssessmentStep3Page() {
     </>
   );
 }
+
+    
