@@ -8,7 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import type { AssessmentData, RecommendationDetail, SummaryByCategory, HairLossImage } from '@/types';
+import type { AssessmentData, RecommendationDetail, SummaryByCategory } from '@/types';
 import { ArrowLeft, Lightbulb, CheckCircle2, ShieldAlert, BookOpen, Crown, Pilcrow } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
@@ -87,8 +87,10 @@ export default function AssessmentStep3Page() {
           severity: "Assessment incomplete",
           duration: "variable",
           treatmentSuitability: "maybe (need consultation)",
+          recommendations: [],
+          generatedAt: new Date().toISOString(),
         };
-        const finalData = { ...data, assessmentResults: { ...results, recommendations: [], generatedAt: new Date().toISOString() }};
+        const finalData = { ...data, assessmentResults: results, currentStep: 3 };
         setAssessmentData(finalData);
         sessionStorage.setItem('assessmentData', JSON.stringify(finalData));
         setIsLoading(false);
@@ -99,6 +101,25 @@ export default function AssessmentStep3Page() {
       const identifiedConditions = selectedImages
         .map(image => CONDITION_MAPPING[image.description])
         .filter(Boolean);
+
+      // Handle conflicting conditions edge case
+      if (identifiedConditions.length > 3) {
+        const results = {
+          conditionName: "Multiple Hair Loss Types",
+          commonName: "Complex presentation",
+          scarring: "Mixed",
+          severity: "Variable",
+          duration: "variable",
+          treatmentSuitability: "maybe (need consultation)",
+          recommendations: [],
+          generatedAt: new Date().toISOString(),
+        };
+        const finalData = { ...data, assessmentResults: results, currentStep: 3 };
+        setAssessmentData(finalData);
+        sessionStorage.setItem('assessmentData', JSON.stringify(finalData));
+        setIsLoading(false);
+        return;
+      }
 
       // 2. Determine Primary Condition
       let primaryCondition = identifiedConditions[0];
@@ -218,7 +239,7 @@ export default function AssessmentStep3Page() {
         <Progress value={60} className="w-full mb-6" />
 
         <div className="mb-8 text-center">
-          <h1 className="text-2xl font-semibold mb-2 text-foreground">Step 3: Your AI-Powered Assessment Results</h1>
+          <h1 className="text-2xl font-semibold mb-2 text-foreground">Step 3: Your Assessment Results</h1>
           <p className="text-muted-foreground">Here is a summary based on your selections.</p>
         </div>
 
@@ -231,7 +252,7 @@ export default function AssessmentStep3Page() {
               <Card className="flex flex-col">
                  <CardHeader className="flex flex-row items-center gap-3 space-y-0 pb-4">
                     <Crown className="w-6 h-6 text-primary" />
-                    <CardTitle className="text-xl">AI Classification</CardTitle>
+                    <CardTitle className="text-xl">Your Classification</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                     <div>

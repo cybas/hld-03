@@ -43,18 +43,18 @@ export interface RecommendationDetail {
 export interface AssessmentResults {
   // Old fields, will be phased out or used as fallback
   classification?: 'Temporary' | 'Permanent Non-Scarring' | 'Permanent Scarring' | 'Unknown';
-  severity?: 'Mild' | 'Mild to Moderate' | 'Moderate' | 'Moderate to Severe' | 'Severe' | 'Unknown' | 'Normal' | 'Advanced' | 'Complete' | 'Early' | 'Assessment incomplete' | 'Variable';
-  selectedImageSummary?: SummaryByCategory | string;
-  contributingFactorsSummary?: SummaryByCategory | string;
   
   // New detailed fields
   conditionName?: string;
   commonName?: string;
   scarring?: 'Yes' | 'No' | 'Unknown' | 'Mixed';
+  severity?: 'Mild' | 'Mild to Moderate' | 'Moderate' | 'Moderate to Severe' | 'Severe' | 'Unknown' | 'Normal' | 'Advanced' | 'Complete' | 'Early' | 'Assessment incomplete' | 'Variable';
   duration?: 'temporary' | 'permanent' | 'variable';
   treatmentSuitability?: 'yes' | 'no' | 'maybe (need consultation)';
 
   // Maintained fields
+  selectedImageSummary?: SummaryByCategory | string;
+  contributingFactorsSummary?: SummaryByCategory | string;
   recommendations: RecommendationDetail[];
   generatedAt: string;
 }
