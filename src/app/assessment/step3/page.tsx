@@ -14,6 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { CONDITION_MAPPING, SEVERITY_MAPPING } from './data';
 import { recommendationMap } from './recommendation-data';
+import { Input } from '@/components/ui/input';
 
 
 const LoadingSkeleton = () => (
@@ -153,6 +154,7 @@ export default function AssessmentStep3Page() {
       
 
       const getTreatmentSuitability = (condition: any, severity: any) => {
+        if (!condition) return "maybe (need consultation)";
         if (condition.scarring) return "maybe (need consultation)";
         if (condition.id === "trichotillomania") return "maybe (need consultation)";
         if (["anagen_effluvium", "radiation_induced_alopecia"].includes(condition.id)) return "maybe (need consultation)";
@@ -481,3 +483,5 @@ export default function AssessmentStep3Page() {
     </>
   );
 }
+
+    

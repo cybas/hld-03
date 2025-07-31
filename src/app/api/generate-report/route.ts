@@ -110,3 +110,5 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to generate and send report.', details: error.message }, { status: 500 });
   }
 }
+
+    
