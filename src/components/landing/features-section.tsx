@@ -1,5 +1,8 @@
+
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Sparkles, TestTubeDiagonal, Target } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 const features = [
   {
@@ -46,6 +49,11 @@ export function FeaturesSection() {
               </CardContent>
             </Card>
           ))}
+        </div>
+        <div className="text-center mt-12">
+            <Button asChild size="lg">
+                <Link href="/assessment/step1">Start Assessment Now</Link>
+            </Button>
         </div>
       </div>
     </section>
