@@ -21,7 +21,7 @@ const getCategoryColor = (category: string) => {
     "Medical": "bg-orange-100 text-orange-800",
     "Procedures": "bg-teal-100 text-teal-800"
   };
-  return colors[category] || "bg-gray-100 text-gray-800";
+  return colors[category as keyof typeof colors] || "bg-gray-100 text-gray-800";
 };
 
 export const BlogCard = ({ article }: BlogCardProps) => {
@@ -76,3 +76,5 @@ export const BlogCard = ({ article }: BlogCardProps) => {
     </Link>
   );
 };
+
+    

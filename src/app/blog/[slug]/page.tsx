@@ -3,24 +3,29 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { getArticleBySlug } from '../utils';
 import { 
   Play, ArrowLeft, Share2, BookOpen, ChevronRight, Calendar,
   Clock, Eye, Mail, CheckCircle, FileText
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import type { BlogArticle } from '@/app/blog/data';
 
-const BlogPostPage = ({ params }: { params: { slug: string } }) => {
+const BlogPostPage = () => {
+  const params = useParams();
+  const slug = params.slug as string;
+
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
-  const [article, setArticle] = useState(null);
+  const [article, setArticle] = useState<BlogArticle | null | undefined>(null);
 
   useEffect(() => {
-    if (params.slug) {
-      const foundArticle = getArticleBySlug(params.slug);
+    if (slug) {
+      const foundArticle = getArticleBySlug(slug);
       setArticle(foundArticle);
     }
-  }, [params.slug]);
+  }, [slug]);
 
   const handleSubscribe = () => {
     if (email) {
@@ -28,7 +33,7 @@ const BlogPostPage = ({ params }: { params: { slug: string } }) => {
     }
   };
 
-  const getCategoryColor = (category) => {
+  const getCategoryColor = (category: string) => {
     const colors = {
       "Women's Health": "bg-pink-100 text-pink-800",
       "Prevention": "bg-green-100 text-green-800", 
@@ -40,10 +45,10 @@ const BlogPostPage = ({ params }: { params: { slug: string } }) => {
       "Medical": "bg-orange-100 text-orange-800",
       "Procedures": "bg-teal-100 text-teal-800"
     };
-    return colors[category] || "bg-gray-100 text-gray-800";
+    return colors[category as keyof typeof colors] || "bg-gray-100 text-gray-800";
   };
 
-  const renderContent = (item, index) => {
+  const renderContent = (item: any, index: number) => {
     if (!item) return null;
     switch (item.type) {
       case 'heading':
@@ -67,7 +72,7 @@ const BlogPostPage = ({ params }: { params: { slug: string } }) => {
       case 'list':
         return (
           <ul key={index} className="list-disc list-inside space-y-2 mb-6 text-gray-700">
-            {item.items.map((listItem, listIndex) => (
+            {item.items.map((listItem: string, listIndex: number) => (
               <li key={listIndex}>{listItem}</li>
             ))}
           </ul>
@@ -77,10 +82,18 @@ const BlogPostPage = ({ params }: { params: { slug: string } }) => {
     }
   };
 
-  if (!article) {
+  if (article === null) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <p>Loading article...</p>
+      </div>
+    );
+  }
+  
+  if (article === undefined) {
+      return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <p>Article not found.</p>
       </div>
     );
   }
@@ -176,12 +189,12 @@ const BlogPostPage = ({ params }: { params: { slug: string } }) => {
         {/* Newsletter Signup */}
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-200 mt-12 mb-8">
           <div className="flex items-start gap-4">
-            <Mail className="w-8 h-8 text-blue-600 flex-shrink-0 mt-1" />
+            <Mail className="w-8 h-8 text-primary flex-shrink-0 mt-1" />
             <div className="flex-1">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 Stay Updated on Hair Loss Research
               </h3>
-              <p className="text-gray-600 mb-4 text-sm">
+              <p className="text-muted-foreground mb-4 text-sm">
                 Get the latest evidence-based insights, treatment updates, and expert tips delivered to your inbox monthly.
               </p>
               
@@ -192,11 +205,11 @@ const BlogPostPage = ({ params }: { params: { slug: string } }) => {
                     placeholder="Enter your email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-sm"
                   />
                   <Button
                     onClick={handleSubscribe}
-                    className="px-6 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary/90 transition-colors text-sm whitespace-nowrap"
+                    className="px-6 py-2 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors text-sm whitespace-nowrap"
                   >
                     Subscribe Free
                   </Button>
@@ -278,3 +291,5 @@ const BlogPostPage = ({ params }: { params: { slug: string } }) => {
 };
 
 export default BlogPostPage;
+
+    
