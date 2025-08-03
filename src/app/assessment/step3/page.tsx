@@ -115,7 +115,7 @@ export default function AssessmentStep3Page() {
         if (current.duration === 'permanent' && primary.duration !== 'permanent') return current;
         if (current.duration !== 'permanent' && primary.duration === 'permanent') return primary;
         return primary;
-      }) : null;
+      }) : undefined;
 
       if (!primaryCondition) {
         const finalData = { ...data, assessmentResults: unspecifiedResults, currentStep: 3 };
@@ -307,12 +307,6 @@ export default function AssessmentStep3Page() {
                     <CardTitle className="text-xl">Your Classification</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                    <div>
-                        <span className="text-sm text-muted-foreground">Possible type of alopecia:</span>
-                        <p className="font-medium text-foreground">{results.conditionName}</p>
-                        {results.commonName && <p className="text-sm text-muted-foreground">({results.commonName})</p>}
-                    </div>
-                    
                     <div className="flex items-center">
                         <span className="text-sm text-muted-foreground">Scarring:</span>
                         <Badge variant="outline" className={cn('ml-2', 
@@ -483,5 +477,3 @@ export default function AssessmentStep3Page() {
     </>
   );
 }
-
-    
