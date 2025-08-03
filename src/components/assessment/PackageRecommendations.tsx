@@ -7,6 +7,7 @@ import { PackageCard } from './PackageCard';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 interface PackageRecommendationsProps {
   data: AssessmentData;
@@ -20,6 +21,8 @@ interface PackageRecommendationsProps {
 export function PackageRecommendations({ data, recommendations }: PackageRecommendationsProps) {
   const recommendedPackage = recommendations.recommendedId ? PACKAGES[recommendations.recommendedId] : null;
   const alternativePackages = recommendations.alternativeIds.map(id => PACKAGES[id]);
+  const allPackages = [recommendedPackage, ...alternativePackages].filter(Boolean);
+
 
   if (!data.assessmentResults || !data.treatmentPreferences) {
     return <div>Loading preferences...</div>;
@@ -51,16 +54,19 @@ export function PackageRecommendations({ data, recommendations }: PackageRecomme
         </CardContent>
       </Card>
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+      <div className={cn(
+        "flex flex-wrap items-start gap-8",
+        allPackages.length < 3 ? "justify-center" : "justify-center lg:justify-between"
+      )}>
         {recommendedPackage && (
-            <div className="lg:col-span-1">
+            <div className="w-full max-w-sm shrink-0">
                 <PackageCard pkg={recommendedPackage} recommendationType="primary"/>
             </div>
         )}
         
         {alternativePackages.map(pkg => (
             pkg && (
-                <div key={pkg.id} className="lg:col-span-1">
+                <div key={pkg.id} className="w-full max-w-sm shrink-0">
                     <PackageCard pkg={pkg} recommendationType="alternative" />
                 </div>
             )
