@@ -1,4 +1,3 @@
-
 'use client';
 
 import { PACKAGES } from '@/app/assessment/step5/data';
